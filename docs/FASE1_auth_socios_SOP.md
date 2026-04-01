@@ -32,7 +32,8 @@ El requerimiento crítico de negocio es que **TODAS** las entidades operativas (
 ## 4. RESTRICCIONES Y CASOS BORDE (MEMORIA DE APRENDIZAJE)
 - **Multi-Tenant Fuerte:** Nunca usar un `ModelViewSet` sin sobreescribir `get_queryset()` para filtrar `club_id = request.user.club_id`.
 - **Custom User:** Obligatorio crear el CustomUser *antes* de correr `python manage.py migrate` por primera vez, si no Django se corrompe históricamente.
-- **Frontend Admin:** La API debe incluir todos los métodos (POST, PUT, DELETE lógico, GET) para que el Panel React pueda crear usuarios y profesores sin pisar el admin de Django.
+- **Frontend Admin:** The API should include all methods (POST, PUT, DELETE logical, GET) so the React panel can manage users without touching Django admin.
+- **CREDENTIALS LOGGING**: Any manually created credentials (`admin`, `test_users`, etc.) must be stored in `user_pass/user_pass.md` (Ignored by Git).
 
 ---
 *Fin del documento SOP Fase 1.*

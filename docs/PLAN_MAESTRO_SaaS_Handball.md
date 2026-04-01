@@ -1,7 +1,7 @@
 # 🏆 PLAN MAESTRO – SaaS CLUB HANDBALL
-**Versión:** 1.6  
+**Versión:** 1.7  
 **Fecha:** 2026-04-01  
-**Estado:** ACTIVO – Entornos Git y Versionado Configurados  
+**Estado:** ACTIVO – Memoria de credenciales habilitada  
 
 ---
 
@@ -100,7 +100,8 @@ Si en algún punto **no hay alternativa gratuita viable**, el Agente DEBE:
 ### Entregables
 - [x] Repositorio Git inicializado con las 3 ramas (`main`, `dev`, `test`).
 - [ ] UI de React debe evidenciar Entorno y Versión mediante `import.meta.env`.
-- [ ] Estructura de carpetas del proyecto y Virtualenv en `d:/Proyectos/Salesianos/`.
+- [ ] Structure of project folders and Virtualenv in `d:/Proyectos/Salesianos/`.
+- [ ] **Credential Storage Policy**: All system credentials (DB, Admin, Emails, APIKeys) must be documented in `user_pass/user_pass.md`. This folder is EXCLUDED from git for security.
 - [ ] Django configurado con:
   - Multi-tenant via `club_id` en cada modelo
   - Settings separados: `base.py`, `dev.py`, `prod.py`
@@ -503,13 +504,13 @@ Trazabilidad completa de acciones y Dashboards analíticos para la Comisión Dir
 
 > **REGLA:** Antes de terminar la sesión o al arrancar el día siguiente, esta sección DEBE consultarse y actualizarse con: `[ ]` o `[x]` + Fecha/Hora local + Tarea realizada/Próximo paso explícito.
 
-### FASE 0: FUNDACIÓN E INFRAESTRUCTURA
-- [x] **2026-04-01 11:15hs:** Plan Maestro creado, revisado y aprobado (Fases 0 a 7 definidas).
-- [x] **2026-04-01 11:20hs:** Alineación del plan v1.3 cruzando Specs Documentales.
-- [x] **2026-04-01 11:25hs:** Credenciales DB, MP (Test) y Resend (SMTP) recibidas e integradas en entorno.
-- [x] **2026-04-01 11:35hs:** Plan reformulado a v1.5 agregando Fase 8 de Manual de Usuario tal como fue requerido.
-- [x] **2026-04-01 11:40hs:** Inicializado el repositorio Git oficial, ramas `main`, `dev` y `test` cargadas al remoto. (Plan actualizado a v1.6 con la estrategia de branch y visualización de versiones).
-- [ ] **2026-04-01 11:45hs:** En proceso: Configuración de Base de Datos, estructura Django y Vite React.
+### FASE 1: AUTENTICACIÓN, ROLES Y BASE SOCIETARIA
+- [x] **2026-04-01 12:30hs:** Modelos `Club`, `CustomUser` (con `role` y `club_id`) y `Socio` creados y migrados a `salesianosdb`.
+- [x] **2026-04-01 12:32hs:** API JWT: Login endpoint, `SocioViewSet` y `ClubViewSet` con filtro multi-tenant automático.
+- [x] **2026-04-01 12:20hs:** Frontend Login premium (glassmorphism, indicador de entorno DEV/PROD y versión).
+- [x] **2026-04-01 12:33hs:** Backend live en `http://localhost:8000` — Frontend live en `http://localhost:5174`.
+- [x] **2026-04-01 12:38hs:** Commit `feat(fase1)` pusheado a rama `dev` en GitHub.
+- [ ] **PRÓXIMO PASO: Iniciar Fase 2 – Cuenta Corriente y Pagos**: Modelos `CuentaCorriente`, `MovimientoFinanciero`, endpoint de carga masiva de cuotas.
 
 ---
 
