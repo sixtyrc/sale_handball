@@ -24,3 +24,6 @@ backend/static/
 .DS_Store
 Thumbs.db
 .tmp/
+
+# Credentials (Private)
+user_pass/
