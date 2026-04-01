@@ -1,7 +1,7 @@
 # 🏆 PLAN MAESTRO – SaaS CLUB HANDBALL
-**Versión:** 1.5  
+**Versión:** 1.6  
 **Fecha:** 2026-04-01  
-**Estado:** ACTIVO – Inicializado y en Fase 0  
+**Estado:** ACTIVO – Entornos Git y Versionado Configurados  
 
 ---
 
@@ -55,10 +55,7 @@ saas-handball/
 ---
 
 ## 💰 POLÍTICA DE COSTOS – 100% FREE
-
-> **REGLA GLOBAL:** Todo componente, librería, servicio o API utilizada en este proyecto DEBE ser gratuita (open-source, free tier permanente o self-hosted). Esta regla aplica a todas las fases.
-
-### Tabla de Tecnologías: Free vs Alternativa
+> **REGLA GLOBAL:** Todo componente, librería, servicio o API utilizada en este proyecto DEBE ser gratuita.
 
 | Necesidad | Opción Free (USAR) | Opción de pago (EVITAR) |
 |-----------|-------------------|------------------------|
@@ -92,12 +89,18 @@ Si en algún punto **no hay alternativa gratuita viable**, el Agente DEBE:
 **Pre-requisito:** Ninguno (Python y PostgreSQL ya instalados en el equipo)  
 **Objetivo:** Esqueleto técnico listo para que todas las fases siguientes puedan construirse sin fricciones.
 
-> ⚠️ **SIN DOCKER** – El entorno local ya cuenta con Python y PostgreSQL corriendo. No se usará Docker en ninguna fase. Las credenciales de la DB serán provistas por el usuario cuando se necesiten.
+> ⚠️ **ENTORNO LOCAL SIN DOCKER** – Python y PostgreSQL ya en funcionamiento local.
+
+### Estrategia Git y Entornos (Obligatorio)
+- **`prod` (`main`)**: Código de producción estable.
+- **`test`**: Entorno de validación / UAT.
+- **`dev`**: Rama principal de desarrollo donde operará el Agente (esta es la rama DEFAULT de trabajo).
+- **Control de Versiones**: Se debe inyectar de manera automatizada usando las variables `.env` qué versión es (ej: v1.0.0) y en qué entorno está corriendo el sistema para que se refleje de manera visible en el Login / Nav del frontend.
 
 ### Entregables
-- [ ] Estructura de carpetas del proyecto creada en `d:/Proyectos/Salesianos/`
-- [ ] Repositorio Git inicializado con `.gitignore` apropiado
-- [ ] Virtualenv Python creado (`venv/`) y activado
+- [x] Repositorio Git inicializado con las 3 ramas (`main`, `dev`, `test`).
+- [ ] UI de React debe evidenciar Entorno y Versión mediante `import.meta.env`.
+- [ ] Estructura de carpetas del proyecto y Virtualenv en `d:/Proyectos/Salesianos/`.
 - [ ] Django configurado con:
   - Multi-tenant via `club_id` en cada modelo
   - Settings separados: `base.py`, `dev.py`, `prod.py`
@@ -505,10 +508,11 @@ Trazabilidad completa de acciones y Dashboards analíticos para la Comisión Dir
 - [x] **2026-04-01 11:20hs:** Alineación del plan v1.3 cruzando Specs Documentales.
 - [x] **2026-04-01 11:25hs:** Credenciales DB, MP (Test) y Resend (SMTP) recibidas e integradas en entorno.
 - [x] **2026-04-01 11:35hs:** Plan reformulado a v1.5 agregando Fase 8 de Manual de Usuario tal como fue requerido.
-- [ ] **2026-04-01 11:40hs:** En proceso: Creación de base de datos e inicialización de carpetas de Django y Vite (Corriendo Python y Npx).
+- [x] **2026-04-01 11:40hs:** Inicializado el repositorio Git oficial, ramas `main`, `dev` y `test` cargadas al remoto. (Plan actualizado a v1.6 con la estrategia de branch y visualización de versiones).
+- [ ] **2026-04-01 11:45hs:** En proceso: Configuración de Base de Datos, estructura Django y Vite React.
 
 ---
 
 *Documento generado por el Agente de Desarrollo Autónomo – 2026-04-01*  
-*Actualizado v1.5 – Agregada la Fase 8 (Manual de Usuario) e inicializando servicios core.*  
+*Actualizado v1.6 – Estrategia Git y Versionamiento visible agregado.*  
 *Próxima actualización: Al completar inicialización.*
