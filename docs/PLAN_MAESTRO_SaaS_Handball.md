@@ -524,7 +524,14 @@ Trazabilidad completa de acciones y Dashboards analíticos para la Comisión Dir
 - [x] **2026-04-01 12:53hs:** Funciones decoradas `@property` para chequeo en tiempo real de apto médico y habilitación.
 - [x] **2026-04-01 12:55hs:** API viewsets conectados bajo `/api/v1/deportes/` con filtro IsFromClub.
 - [x] **2026-04-01 13:00hs:** Commit `feat(fase3)` pusheado a la rama `dev`.
-- [ ] **PRÓXIMO PASO: Iniciar Fase 4 – Administración y Configuración Extendida**: Manejo de temporadas, costos de cuota y configuración de branding.
+
+### FASE 4: ADMINISTRACIÓN Y CONFIGURACIÓN EXTENDIDA
+- [x] **2026-04-01 13:04hs:** SOP Fase 4 redactado (`docs/FASE4_admin_config_SOP.md`).
+- [x] **2026-04-01 13:05hs:** App `admin_club` creada con modelos `ClubConfig`, `Temporada` y `ConceptoCobrable`.
+- [x] **2026-04-01 13:05hs:** Signal pre_save para garantizar que solo exista una temporada ACTIVA a la vez.
+- [x] **2026-04-01 13:06hs:** Endpoint PÚBLICO para Branding multi-tenant (para la PWA Frontend).
+- [x] **2026-04-01 13:08hs:** Commit `feat(fase4)` pusheado a rama `dev`.
+- [ ] **PRÓXIMO PASO: Iniciar Fase 5 – Eventos, Partidos y Asistencia**: Módulo interactivo para profesores.
 
 ---
 
