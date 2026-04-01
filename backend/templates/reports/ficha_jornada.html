@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Reporte de Jornada - {{ club.nombre }}</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 2cm;
+            @bottom-left {
+                content: "Desarrollado por ctsoft.com.ar";
+                font-family: Arial, sans-serif;
+                font-size: 8pt;
+                color: #666;
+            }
+            @bottom-right {
+                content: "Impreso el: {{ fecha_impresion }}";
+                font-family: Arial, sans-serif;
+                font-size: 8pt;
+                color: #666;
+            }
+        }
+        body {
+            font-family: 'Helvetica', 'Arial', sans-serif;
+            color: #333;
+            line-height: 1.6;
+        }
+        .header {
+            display: flex;
+            align-items: center;
+            border-bottom: 2px solid #2563eb;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+        .logo {
+            max-height: 80px;
+            margin-right: 20px;
+        }
+        .club-name {
+            font-size: 24pt;
+            font-weight: bold;
+            color: #1e3a8a;
+            margin: 0;
+        }
+        .report-title {
+            text-align: center;
+            text-transform: uppercase;
+            font-weight: bold;
+            font-size: 18pt;
+            margin: 20px 0;
+            color: #2563eb;
+        }
+        .summary-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .info-box {
+            background: #f8fafc;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+        }
+        .info-box h3 {
+            margin-top: 0;
+            font-size: 10pt;
+            text-transform: uppercase;
+            color: #64748b;
+            border-bottom: 1px solid #cbd5e1;
+            padding-bottom: 5px;
+        }
+        .financial-summary {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 30px;
+        }
+        .financial-summary th, .financial-summary td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .financial-summary th {
+            background-color: #f1f5f9;
+            font-weight: bold;
+        }
+        .total-row {
+            background-color: #e2e8f0;
+            font-weight: bold;
+            font-size: 14pt;
+        }
+        .participants-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .participants-table th {
+            background-color: #2563eb;
+            color: white;
+            text-align: left;
+            padding: 10px;
+        }
+        .participants-table td {
+            padding: 8px;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        .highlight-green { color: #15803d; font-weight: bold; }
+        .highlight-red { color: #b91c1c; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        {% if logo_url %}
+            <img src="file://{{ logo_url }}" class="logo">
+        {% endif %}
+        <div>
+            <h1 class="club-name">{{ club.nombre }}</h1>
+            <p style="margin: 0; color: #64748b;">Sistema de Gestión de Handball - Módulo Somos Locales</p>
+        </div>
+    </div>
+
+    <h2 class="report-title">FICHA DE JORNADA LOCAL</h2>
+
+    <div class="summary-grid">
+        <div class="info-box">
+            <h3>DATOS DEL EVENTO</h3>
+            <p><strong>Título:</strong> {{ jornada.titulo }}</p>
+            <p><strong>Fecha:</strong> {{ jornada.fecha|date:"d/m/Y" }}</p>
+            <p><strong>Estado:</strong> {{ jornada.get_estado_display }}</p>
+        </div>
+        <div class="info-box">
+            <h3>CAJA Y ARQUEO</h3>
+            <p><strong>Recaudado Efvo:</strong> ${{ resumen.total_efectivo|floatformat:2 }}</p>
+            <p><strong>Recaudado Digital:</strong> ${{ resumen.total_digital|floatformat:2 }}</p>
+            <p><strong>Efvo Entregado:</strong> ${{ balance.efectivo_declarado|floatformat:2 }}</p>
+            <p><strong>Diferencia:</strong> 
+                <span class="{% if resumen.diferencia_arqueo < 0 %}highlight-red{% else %}highlight-green{% endif %}">
+                    ${{ resumen.diferencia_arqueo|floatformat:2 }}
+                </span>
+            </p>
+        </div>
+    </div>
+
+    <h3 style="border-left: 4px solid #2563eb; padding-left: 10px;">DESGLOSE POR CONCEPTO</h3>
+    <table class="financial-summary">
+        <thead>
+            <tr>
+                <th>CONCEPTO</th>
+                <th>CANTIDAD DE VENTAS</th>
+                <th>TOTAL</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>VENTAS DE ENTRADAS</td>
+                <td>{{ jornada.ventas.filter_tipo_entrada.count|default:"-" }}</td>
+                <td>${{ resumen.total_entradas|floatformat:2 }}</td>
+            </tr>
+            <tr>
+                <td>VENTAS DE CANTINA / BUFFET</td>
+                <td>{{ jornada.ventas.filter_tipo_buffet.count|default:"-" }}</td>
+                <td>${{ resumen.total_cantina|floatformat:2 }}</td>
+            </tr>
+            <tr class="total-row">
+                <td colspan="2">TOTAL RECAUDADO (BRUTO)</td>
+                <td>${{ resumen.total_efectivo|add:resumen.total_digital|floatformat:2 }}</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h3 style="border-left: 4px solid #2563eb; padding-left: 10px;">PARTICIPANTES Y VOLUNTARIOS</h3>
+    <table class="participants-table">
+        <thead>
+            <tr>
+                <th>SOCIO / FAMILIA</th>
+                <th>TAREA REALIZADA</th>
+                <th>CUMPLIDO</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for v in voluntarios %}
+                <tr>
+                    <td>{{ v.persona.apellidos }}, {{ v.persona.nombres }}</td>
+                    <td>{{ v.get_tarea_display }}</td>
+                    <td>{% if v.cumplido %}SÍ{% else %}NO{% endif %}</td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="3" style="text-align: center; color: #94a3b8;">No se registraron voluntarios para esta fecha.</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    {% if balance.observaciones_cierre %}
+    <div style="margin-top: 30px;">
+        <h3 style="border-left: 4px solid #f59e0b; padding-left: 10px;">OBSERVACIONES DE CIERRE</h3>
+        <p style="font-style: italic; color: #4b5563;">{{ balance.observaciones_cierre }}</p>
+    </div>
+    {% endif %}
+
+</body>
+</html>

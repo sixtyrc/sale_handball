@@ -16,10 +16,19 @@ class Jornada(models.Model):
     titulo = models.CharField(max_length=200, help_text="Ej: Fecha 3 vs Club Mitre")
     fecha = models.DateField()
     
+    # Acceso Ágil para Padres
+    access_pin = models.CharField(max_length=10, blank=True, null=True, help_text="PIN temporal para que voluntarios operen sin login.")
+    slug = models.SlugField(unique=True, blank=True, null=True)
+
     estado = models.CharField(max_length=20, choices=ESTADO_CHOICES, default='PLANEADA')
     observaciones = models.TextField(blank=True, null=True)
     
     created_at = models.DateTimeField(auto_now_add=True)
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = uuid.uuid4().hex[:12]
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f"{self.titulo} - {self.fecha} ({self.get_estado_display()})"
@@ -77,7 +86,10 @@ class VentaJornada(models.Model):
     
     monto = models.DecimalField(max_digits=10, decimal_places=2)
     tipo = models.CharField(max_length=30, choices=TIPO_CHOICES)
-    metodo_pago = models.CharField(max_length=50, default='EFECTIVO')
+    metodo_pago = models.CharField(max_length=50, default='EFECTIVO', help_text="EFECTIVO, TRANSFERENCIA, QR")
+    
+    # Opcional vinculación a socio para el Muro de Ayuda (si el socio compra y quiere sumar puntos)
+    socio_comprador = models.ForeignKey(Socio, on_delete=models.SET_NULL, null=True, blank=True)
     
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -100,11 +112,30 @@ class CajaJornada(models.Model):
     
     rendida_a_tesoreria = models.BooleanField(default=False)
     fecha_rendicion = models.DateTimeField(null=True, blank=True)
+    
+    # Arqueo de efectivo
+    efectivo_declarado = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal('0.00'), help_text="Monto entregado físicamente por el voluntario")
+    observaciones_cierre = models.TextField(blank=True, null=True)
 
-    def calcular_balance(self):
-        ingresos = self.jornada.ventas.aggregate(models.Sum('monto'))['monto__sum'] or Decimal('0.00')
+    def calcular_resumen(self):
+        ventas = self.jornada.ventas.all()
+        total_entradas = ventas.filter(tipo='ENTRADA').aggregate(models.Sum('monto'))['monto__sum'] or Decimal('0.00')
+        total_cantina = ventas.filter(tipo='BUFFET').aggregate(models.Sum('monto'))['monto__sum'] or Decimal('0.00')
+        total_efectivo = ventas.filter(metodo_pago='EFECTIVO').aggregate(models.Sum('monto'))['monto__sum'] or Decimal('0.00')
+        total_digital = ventas.filter(metodo_pago__in=['TRANSFERENCIA', 'QR']).aggregate(models.Sum('monto'))['monto__sum'] or Decimal('0.00')
+        
         egresos = self.egreso_arbitros + self.egreso_viaticos + self.otros_egresos
-        return ingresos - egresos
+        sobrante_esperado = total_efectivo - egresos
+        
+        return {
+            'total_entradas': total_entradas,
+            'total_cantina': total_cantina,
+            'total_efectivo': total_efectivo,
+            'total_digital': total_digital,
+            'egresos_totales': egresos,
+            'sobrante_efectivo_esperado': sobrante_esperado,
+            'diferencia_arqueo': self.efectivo_declarado - sobrante_esperado
+        }
 
     def __str__(self):
         return f"Balance: {self.jornada.titulo}"
