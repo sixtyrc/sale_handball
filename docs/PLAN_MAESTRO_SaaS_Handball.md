@@ -564,7 +564,18 @@ Trazabilidad completa de acciones y Dashboards analíticos para la Comisión Dir
 - [x] **2026-04-01 13:05hs:** Signal pre_save para garantizar que solo exista una temporada ACTIVA a la vez.
 - [x] **2026-04-01 13:06hs:** Endpoint PÚBLICO para Branding multi-tenant (para la PWA Frontend).
 - [x] **2026-04-01 13:08hs:** Commit `feat(fase4)` pusheado a rama `dev`.
-- [ ] **PRÓXIMO PASO: Iniciar Fase 5 – Eventos, Partidos y Asistencia**: Módulo interactivo para profesores.
+
+### FASE 5: EVENTOS, PARTIDOS Y ASISTENCIA
+- [x] **2026-04-01 13:13hs:** Creación de SOP Fase 5 (`docs/FASE5_eventos_SOP.md`).
+- [x] **2026-04-01 13:15hs:** API endpoint para cobranza in-situ del Tercer Tiempo y Arbitraje Variable.
+- [x] **2026-04-01 13:18hs:** Commit `feat(fase5)` completado y subido a la rama `dev`.
+- [x] **2026-04-01 14:00hs:** Calibración Real: Soft Warnings, Refuerzos y Profesores Multirama.
+
+### FASE 6: TESORERÍA, PAGOS Y MERCHANDISING
+- [x] **2026-04-01 13:46hs:** SOP Fase 6 redactado (`docs/FASE6_tesoreria_SOP.md`).
+- [x] **2026-04-01 13:46hs:** App `tesoreria` creada con modelos `CajaDiaria`, `PagoRecibido` y `ProductoMerchandising`.
+- [x] **2026-04-01 14:02hs:** Commit `feat(fase6)` completado y subido a la rama `dev`.
+- [ ] **PRÓXIMO PASO: Iniciar Fase 7 – Jornada Local y Cantina ("Somos Locales")**: Control de voluntarios, donaciones y caja comercial de partido.
 
 ---
 
