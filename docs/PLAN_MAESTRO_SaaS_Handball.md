@@ -510,7 +510,14 @@ Trazabilidad completa de acciones y Dashboards analíticos para la Comisión Dir
 - [x] **2026-04-01 12:20hs:** Frontend Login premium (glassmorphism, indicador de entorno DEV/PROD y versión).
 - [x] **2026-04-01 12:33hs:** Backend live en `http://localhost:8000` — Frontend live en `http://localhost:5174`.
 - [x] **2026-04-01 12:38hs:** Commit `feat(fase1)` pusheado a rama `dev` en GitHub.
-- [ ] **PRÓXIMO PASO: Iniciar Fase 2 – Cuenta Corriente y Pagos**: Modelos `CuentaCorriente`, `MovimientoFinanciero`, endpoint de carga masiva de cuotas.
+
+### FASE 2: CUENTA CORRIENTE Y SISTEMA FINANCIERO
+- [x] **2026-04-01 12:46hs:** SOP Fase 2 creado (`docs/FASE2_finanzas_SOP.md`).
+- [x] **2026-04-01 12:50hs:** App `finanzas` creada. Modelos `CuentaCorriente` e `MovimientoFinanciero` migrados.
+- [x] **2026-04-01 12:50hs:** Signal auto-crea `CuentaCorriente` al crear un `Socio`.
+- [x] **2026-04-01 12:50hs:** APIs: cuenta por socio, registrar movimiento, cuotas masivas, saldo inicial histórico.
+- [x] **2026-04-01 12:50hs:** Commit `feat(fase2)` pusheado a rama `dev` en GitHub.
+- [ ] **PRÓXIMO PASO: Iniciar Fase 3 – Módulo Deportivo y Perfiles**: App deportes, perfiles de jugador, categorías.
 
 ---
 
