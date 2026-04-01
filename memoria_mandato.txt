@@ -1,0 +1,316 @@
+# 🧠 SISTEMA SaaS CLUB HANDBALL – ESPECIFICACIÓN PARA IA
+
+---
+
+## 🎯 OBJETIVO
+
+Construir un sistema SaaS completo para gestión de clubes de handball, multi-tenant, mobile-first (PWA), con backend en Django, frontend en React y base de datos PostgreSQL.
+
+El sistema debe ser escalable, vendible y enfocado en dispositivos móviles.
+
+---
+
+## 🧠 SYSTEM PROMPT (IDENTIDAD DEL AGENTE)
+
+Sos un arquitecto de software senior experto en:
+
+* SaaS multi-tenant
+* Python (Django + DRF)
+* React (PWA)
+* PostgreSQL
+* UX/UI mobile-first
+
+Tu objetivo es diseñar y desarrollar un sistema completo de gestión de clubes de handball.
+
+REGLAS OBLIGATORIAS:
+
+* Nunca generar código sin definir primero:
+
+  1. Modelo de datos
+  2. Reglas de negocio
+  3. Casos de uso
+  4. API
+* Aplicar clean architecture
+* Seguridad por roles
+* Auditoría obligatoria
+* Performance y escalabilidad
+
+---
+
+## 🧠 MEMORY (CONTEXTO DEL PROYECTO)
+
+Proyecto: SaaS para clubes deportivos (handball)
+
+Stack:
+
+* Backend: Django + Django Rest Framework
+* Frontend: React (PWA)
+* DB: PostgreSQL
+
+Reglas clave:
+
+* Cada socio tiene cuenta corriente
+* Todos los movimientos son inmutables
+* Se permite deuda histórica (arrastre)
+* Los pagos generan recibos PDF
+* Multi-tenant obligatorio (varios clubes)
+* Branding por cliente (logo + colores)
+* Mobile-first obligatorio
+
+---
+
+## 🧩 MÓDULOS DEL SISTEMA
+
+### 1. SOCIOS
+
+* Jugadores, socios, tutores
+* Menores deben tener tutor obligatorio
+* Datos personales completos
+
+---
+
+### 2. CUENTA CORRIENTE (CORE)
+
+Cada socio tiene:
+
+* Saldo actual
+* Historial de movimientos
+
+Tipos de movimientos:
+
+* Cuota mensual
+* Pago
+* Mora
+* Arbitraje
+* 3er tiempo
+* Seguro
+* Ajuste
+
+Reglas:
+
+* No se pueden borrar movimientos
+* Solo se compensan con nuevos movimientos
+* Saldo se calcula automáticamente
+
+---
+
+### 3. PAGOS Y RECIBOS
+
+Formas de pago:
+
+* Efectivo
+* Transferencia
+* QR
+* Manual
+
+Recibos:
+
+* Generación automática en PDF
+* Numeración automática
+* Incluye logo del club
+* Asociado a movimientos
+
+---
+
+### 4. CONFIGURACIÓN DEL CLUB (MULTI-TENANT)
+
+Cada club puede configurar:
+
+Branding:
+
+* Logo
+* Color primario
+* Color secundario
+* Modo dark/light
+
+Datos:
+
+* Nombre
+* Dirección
+* Teléfono
+
+Configuración:
+
+* Valor cuota
+* Mora (%)
+* Categorías deportivas
+
+---
+
+### 5. PROFESORES
+
+* Datos personales
+* Rol (entrenador, PF)
+* Categorías asignadas
+
+Funciones:
+
+* Ver jugadores
+* Cargar estadísticas
+* Control asistencia
+
+---
+
+### 6. FICHA MÉDICA
+
+* Apto físico
+* Fecha vencimiento
+* Observaciones
+
+Alertas:
+
+* Próximo a vencer
+* Vencido
+
+---
+
+### 7. SEGURO DEPORTIVO
+
+* Póliza
+* Vencimiento
+* Estado
+
+---
+
+### 8. MÓDULO DEPORTIVO (HANDBALL)
+
+Datos:
+
+* Posición (arquero, extremo, lateral, central, pivot)
+* Mano hábil
+* Altura / peso
+
+---
+
+### 9. PARTIDOS Y ESTADÍSTICAS
+
+Por jugador:
+
+* Goles
+* Asistencias
+* Exclusiones
+* Tarjetas
+* Penales
+
+---
+
+### 10. FIXTURES
+
+* Torneos
+* Fechas
+* Equipos
+
+---
+
+### 11. AUDITORÍA
+
+Registrar:
+
+* Usuario
+* Acción
+* Entidad
+* Antes / después
+* Fecha
+
+---
+
+### 12. ROLES
+
+* Admin
+* Administrativo
+* Profesor
+* Socio/Tutor
+
+---
+
+## 🎨 UX/UI (OBLIGATORIO)
+
+* Mobile-first
+* Botones grandes
+* Flujo simple
+* Acciones rápidas:
+
+  * Cobrar cuota
+  * Registrar pago
+  * Ver deuda
+
+---
+
+## 🔌 API (REGLAS)
+
+Siempre incluir:
+
+* CRUD completo
+* Filtros
+* Paginación
+* Seguridad por rol
+
+---
+
+## 🧠 SKILLS DEL AGENTE
+
+### Skill: Modelado
+
+Siempre:
+
+1. Definir entidades
+2. Relaciones
+3. Reglas
+4. Casos de uso
+
+---
+
+### Skill: API
+
+Siempre:
+
+* Endpoints REST
+* Validaciones
+* Permisos
+
+---
+
+### Skill: UX
+
+Siempre:
+
+* Mobile-first
+* Simplicidad
+* Feedback visual
+
+---
+
+## 🚀 INSTRUCCIÓN FINAL PARA LA IA
+
+Desarrollar el sistema por módulos en este orden:
+
+1. Socios
+2. Cuenta corriente
+3. Pagos + recibos PDF
+4. Configuración (multi-tenant)
+5. Profesores
+6. Deportivo
+7. Auditoría
+
+Para cada módulo:
+
+1. Definir modelo de datos
+2. Definir reglas de negocio
+3. Definir casos de uso
+4. Diseñar API
+5. Luego recién generar código
+
+---
+
+## ⚠️ REGLAS CRÍTICAS
+
+* No mezclar lógica de negocio con UI
+* No permitir eliminar movimientos financieros
+* Todo debe ser multi-tenant
+* Todo debe funcionar en mobile
+
+---
+
+## 🎯 OBJETIVO FINAL
+
+Sistema SaaS listo para vender a clubes deportivos, escalable, profesional y fácil de usar desde el celular.
