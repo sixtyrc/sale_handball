@@ -1,16 +1,24 @@
-import os
-from datetime import datetime
 from django.conf import settings
 from django.template.loader import render_to_string
-from weasyprint import HTML, CSS
 from admin_club.models import ClubConfig
 from .models import Jornada
+import logging
+import os
+from datetime import datetime
+
+logger = logging.getLogger(__name__)
 
 def generar_pdf_ficha_jornada(jornada_id):
     """
     Genera el reporte PDF profesional de la jornada para el club.
     Incluye membrete, desgloses financieros y branding de CTSoft.
     """
+    try:
+        from weasyprint import HTML, CSS
+    except OSError as e:
+        logger.error(f"Error al cargar WeasyPrint: {e}. Asegúrese de tener GTK+ instalado en Windows.")
+        raise ImportError("El servicio de PDF no está disponible en este servidor (faltan librerías de sistema).")
+
     jornada = Jornada.objects.select_related('club', 'balance_caja').get(id=jornada_id)
     config = ClubConfig.objects.filter(club=jornada.club).first()
     

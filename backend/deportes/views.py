@@ -20,7 +20,15 @@ class CategoriaViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated, IsFromClub]
 
     def get_queryset(self):
-        return Categoria.objects.filter(club=self.request.user.club)
+        user = self.request.user
+        base_qs = Categoria.objects.filter(club=user.club)
+        
+        # Si es profesor, solo ve sus categorías asignadas
+        if user.role == 'PROFESOR':
+            categorias_ids = user.asignaciones_categorias.values_list('categoria_id', flat=True)
+            return base_qs.filter(id__in=categorias_ids)
+            
+        return base_qs
 
     def perform_create(self, serializer):
         serializer.save(club=self.request.user.club)

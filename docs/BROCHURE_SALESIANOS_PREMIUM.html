@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Brochure Premium: Salesianos Handball</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;700;900&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        :root {
+            --primary: #1e3a8a; /* Azul Salesianos */
+            --secondary: #ef4444; /* Rojo Logo */
+            --accent: #3b82f6;
+            --dark: #0f172a;
+            --light: #f8fafc;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            background-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #f1f5f9;
+            color: var(--dark);
+            line-height: 1.6;
+            display: flex;
+            justify-content: center;
+            padding: 40px 0;
+        }
+
+        h1, h2, h3 {
+            font-family: 'Outfit', sans-serif;
+            text-transform: uppercase;
+            letter-spacing: -0.02em;
+        }
+
+        .page {
+            width: 210mm;
+            min-height: 297mm;
+            padding-bottom: 120px; /* Espacio para que el footer no choque */
+            margin: auto;
+            background: white;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.15);
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Hero Section */
+        .hero {
+            min-height: 140mm;
+            background: var(--dark);
+            position: relative;
+            display: flex;
+            align-items: flex-end;
+            padding: 60px;
+            color: white;
+        }
+
+        .hero-image {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            opacity: 0.7;
+        }
+
+        .hero-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to top, var(--dark) 20%, transparent 80%);
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 10;
+            max-width: 95%;
+        }
+
+        .hero h1 {
+            font-size: 64px;
+            font-weight: 900;
+            margin-bottom: 12px;
+            line-height: 0.9;
+        }
+
+        .hero p {
+            font-size: 20px;
+            color: var(--accent);
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+        }
+
+        /* Features Section */
+        .features {
+            padding: 60px;
+            flex-grow: 1;
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 32px;
+        }
+
+        .feature-card {
+            padding: 32px;
+            border-radius: 32px;
+            background: var(--light);
+            border: 1px solid #eef2f6;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .feature-card .icon-wrapper {
+            background: white;
+            width: 64px;
+            height: 64px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+            color: var(--secondary);
+        }
+
+        .feature-card h3 {
+            font-size: 18px;
+            font-weight: 900;
+            color: var(--primary);
+        }
+
+        .feature-card p {
+            font-size: 13px;
+            color: #64748b;
+            line-height: 1.5;
+        }
+
+        /* PWA Badge */
+        .pwa-section {
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            margin: 0 60px;
+            padding: 40px;
+            border-radius: 40px;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 20px 40px rgba(59, 130, 246, 0.2);
+            position: relative;
+            z-index: 5;
+        }
+
+        .pwa-text h2 {
+            font-size: 28px;
+            font-weight: 900;
+            margin-bottom: 8px;
+            line-height: 1;
+        }
+
+        .pwa-text p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .pwa-icon {
+            background: rgba(255,255,255,0.25);
+            padding: 20px;
+            border-radius: 24px;
+        }
+
+        /* Footer Branding */
+        .footer {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            padding: 50px 60px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            background: white;
+            border-top: 1px solid #f1f5f9;
+        }
+
+        .contact-info p {
+            font-size: 12px;
+            font-weight: 800;
+            color: #94a3b8;
+            margin-bottom: 4px;
+            letter-spacing: 0.05em;
+        }
+
+        .ctsoft-branding {
+            text-align: right;
+        }
+
+        .ctsoft-branding p {
+            font-size: 12px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 0.25em;
+            color: var(--primary);
+        }
+
+        .ctsoft-branding span {
+            color: var(--accent);
+        }
+
+        @media print {
+            body { padding: 0; background: white; }
+            .page { margin: 0; box-shadow: none; border: none; }
+            .pwa-section { break-inside: avoid; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="page">
+        <!-- Hero Section con Logo Unificado y Transparente -->
+        <div class="hero">
+            <img src="handball_action_hero_brochure_1775058186982.png" class="hero-image" alt="Handball Action">
+            <div class="hero-overlay"></div>
+            <div class="hero-content">
+                <p style="margin-bottom: 0px;">La Evolución de tu Club</p>
+                <h1 style="margin-top: 0;">Salesianos<br>Handball</h1>
+            </div>
+        </div>
+
+        <!-- Contenido Principal -->
+        <div class="features">
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <div class="icon-wrapper">
+                        <i data-lucide="users" size="32"></i>
+                    </div>
+                    <h3>Control Societario</h3>
+                    <p>Fichas digitales, gestión de perfiles deportivos y carnet digital interactivo con auditoría médica en tiempo real.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="icon-wrapper">
+                        <i data-lucide="banknote" size="32"></i>
+                    </div>
+                    <h3>Finanzas 360&deg;</h3>
+                    <p>Cuentas corrientes automatizadas, cobranza in-situ, arqueos digitales y transparencia total ante la comisión.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="icon-wrapper">
+                        <i data-lucide="trophy" size="32"></i>
+                    </div>
+                    <h3>Gestión Deportiva</h3>
+                    <p>Convocatorias con refuerzos inteligentes, estadísticas de partido y Soft Warnings de salud y deudas.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="icon-wrapper">
+                        <i data-lucide="file-text" size="32"></i>
+                    </div>
+                    <h3>Reportes Oficiales</h3>
+                    <p>Fichas de jornada profesionales, balances de cantina y arqueos de caja en PDF con membresías.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- PWA Highlight -->
+        <div class="pwa-section">
+            <div class="pwa-text">
+                <h2>Cero Papel. 100% Digital.</h2>
+                <p>Instala la plataforma en tu Android o iOS y opera el club <br>directamente desde el campo de juego, incluso offline.</p>
+            </div>
+            <div class="pwa-icon">
+                <i data-lucide="smartphone" size="48"></i>
+            </div>
+        </div>
+
+        <!-- Footer / Branding -->
+        <div class="footer">
+            <div class="contact-info">
+                <p>ADMINISTRACIÓN &middot; DEPORTE &middot; TECNOLOGÍA</p>
+                <p style="color: var(--primary); font-size: 16px;">salesianos.ctsoft.com.ar</p>
+            </div>
+            <div class="ctsoft-branding">
+                <p>Desarrollado por <span>CTSoft.com.ar</span></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Inicializar iconos de lucide
+        lucide.createIcons();
+    </script>
+</body>
+</html>

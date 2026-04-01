@@ -15,6 +15,8 @@ from .serializers import (
     ThirdHalfPaymentSerializer,
     ArbitrajePaymentSerializer
 )
+from deportes.models import PerfilDeportivo, Categoria
+from deportes.eligibility import check_player_health
 
 class EventoViewSet(viewsets.ModelViewSet):
     """
@@ -30,6 +32,48 @@ class EventoViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(club=self.request.user.club, creado_por=self.request.user)
 
+    @action(detail=True, methods=['get'], url_path='convocables')
+    def get_convocables(self, request, pk=None):
+        """
+        Retorna la lista de jugadores que pueden ser convocados para este evento.
+        Incluye jugadores de la categoría del evento + REFUERZOS (categoría inferior).
+        """
+        evento = self.get_object()
+        if not evento.categoria:
+            return Response({'error': 'El evento debe tener una categoría asignada'}, status=400)
+            
+        cat_principal = evento.categoria
+        # Buscamos la categoría inmediata inferior (mismo género, orden superior)
+        # Asumiendo 0=Mayores, 1=Juniors... el refuerzo de Juniors (1) es Juveniles (2)
+        cat_refuerzo = Categoria.objects.filter(
+            club=evento.club,
+            genero=cat_principal.genero,
+            orden=cat_principal.orden + 1
+        ).first()
+        
+        categorias_ids = [cat_principal.id]
+        if cat_refuerzo:
+            categorias_ids.append(cat_refuerzo.id)
+            
+        perfiles = PerfilDeportivo.objects.filter(
+            club=evento.club,
+            categoria_actual_id__in=categorias_ids
+        ).select_related('socio', 'categoria_actual')
+        
+        data = []
+        for p in perfiles:
+            health = check_player_health(p.id)
+            data.append({
+                'id': p.socio.id,
+                'nombre_completo': f"{p.socio.apellidos}, {p.socio.nombres}",
+                'categoria': p.categoria_actual.nombre,
+                'es_refuerzo': p.categoria_actual_id != cat_principal.id,
+                'habilitado_federacion': p.habilitado_federacion,
+                'eligibility': health
+            })
+            
+        return Response(data)
+
     @action(detail=True, methods=['post'], url_path='convocar')
     def convocar_jugadores(self, request, pk=None):
         evento = self.get_object()
@@ -40,29 +84,18 @@ class EventoViewSet(viewsets.ModelViewSet):
         ids_socios = serializer.validated_data['jugadores_ids']
         socios = Socio.objects.filter(id__in=ids_socios, club=request.user.club)
         
-        # Lógica de SOFT WARNINGS (No bloquea, solo avisa)
+        # Lógica de SOFT WARNINGS REALES (Usando eligibility service)
         warnings = []
         for socio in socios:
-            # Check Mora (> 2 cuotas)
-            if socio.cuenta_corriente.saldo < 0:
-                # Simulación de detección de 2 cuotas pendientes 
-                # (Se podría mejorar contando movimientos de tipo CUOTA impagos)
-                warnings.append({
-                    "socio": str(socio),
-                    "tipo": "MORA",
-                    "mensaje": "Debe cuotas sociales (> 2 meses)."
-                })
-            
-            # Check Papeles (Apto y Seguro)
-            if not hasattr(socio, 'perfil_deportivo') or not socio.perfil_deportivo.puede_jugar:
-                msj = "Falta Apto Médico o Seguro Federativo."
-                warnings.append({
-                    "socio": str(socio),
-                    "tipo": "DOCUMENTACION",
-                    "mensaje": msj
-                })
+            if hasattr(socio, 'perfil_deportivo'):
+                health = check_player_health(socio.perfil_deportivo.id)
+                if health['warnings']:
+                    warnings.append({
+                        "socio": str(socio),
+                        "warnings": health['warnings']
+                    })
 
-        # Generar Convocatorias atómicas (Refuerzos permitidos por defecto al filtrar solo por club)
+        # Generar Convocatorias atómicas
         convocatorias_generadas = []
         with transaction.atomic():
             for socio in socios:
@@ -70,9 +103,9 @@ class EventoViewSet(viewsets.ModelViewSet):
                 convocatorias_generadas.append(obj)
 
         return Response({
-            "status": "Convocatoria guardada exitosamente (Refuerzos permitidos)", 
+            "status": "Convocatoria guardada exitosamente", 
             "agregados": len(convocatorias_generadas),
-            "warnings": warnings
+            "warnings": warnings if warnings else None
         }, status=status.HTTP_201_CREATED)
 
     @action(detail=True, methods=['post'], url_path='cobrar-arbitraje')

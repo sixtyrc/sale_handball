@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useAuthStore } from '../store/authStore';
 import { LogIn, Info } from 'lucide-react';
 import Footer from '../components/layout/Footer';
+import clubLogo from '../assets/logo_club.png';
 
 const LoginPage = () => {
   const [username, setUsername] = useState('');
@@ -26,14 +27,12 @@ const LoginPage = () => {
           <div className="absolute -bottom-24 -right-24 w-48 h-48 bg-emerald-600/10 rounded-full blur-3xl"></div>
 
           <div className="relative z-10">
-            <div className="flex justify-center mb-8">
-              <div className="h-20 w-20 bg-gradient-to-tr from-blue-600 to-indigo-500 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-500/20">
-                <LogIn size={40} className="text-white" />
-              </div>
+            <div className="text-center mb-8">
+              <h2 className="text-4xl font-extrabold text-white tracking-tight mb-2">
+                Salesianos <span className="text-red-600">Handball</span>
+              </h2>
+              <p className="text-gray-400">Gestión Institucional de Alto Rendimiento</p>
             </div>
-
-            <h1 className="text-3xl font-bold text-center text-white mb-2 tracking-tight">Handball SaaS</h1>
-            <p className="text-center text-zinc-400 mb-8 text-sm">Gestión integral de clubes</p>
 
             <form onSubmit={handleSubmit} className="space-y-6">
               <div>
@@ -50,9 +49,9 @@ const LoginPage = () => {
                 <label className="block text-sm font-medium text-zinc-300 mb-2">Contraseña</label>
                 <input
                   type="password"
-                  value={username} // Corregido: debería ser password
+                  value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full px-4 py-3 bg-zinc-800/50 border border-zinc-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all"
+                  className="w-full px-4 py-3 bg-zinc-800/50 border border-zinc-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all font-light"
                   placeholder="••••••••"
                 />
               </div>

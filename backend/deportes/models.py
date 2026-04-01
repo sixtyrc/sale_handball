@@ -16,6 +16,7 @@ class Categoria(models.Model):
     nombre = models.CharField(max_length=100) # Ej. Sub-8, Minis, Infantiles, Menores, Cadetes, Juveniles, Juniors, Mayores
     descripcion = models.TextField(blank=True, null=True)
     genero = models.CharField(max_length=20, choices=GENERO_CHOICES)
+    orden = models.PositiveIntegerField(default=0, help_text="Orden de edad (0=Mayores, 1=Juniors, 2=Juveniles, etc. o viceversa)")
     
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

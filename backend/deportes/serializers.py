@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from .models import Categoria, PerfilDeportivo, DocumentoDigital
 from core.serializers import SocioSerializer
+from .eligibility import check_player_health
 
 class CategoriaSerializer(serializers.ModelSerializer):
     class Meta:
@@ -22,11 +23,15 @@ class PerfilDeportivoSerializer(serializers.ModelSerializer):
     apto_medico_vigente = serializers.BooleanField(read_only=True)
     puede_jugar = serializers.BooleanField(read_only=True)
     socio_detalle = SocioSerializer(source='socio', read_only=True)
+    eligibility = serializers.SerializerMethodField()
 
     class Meta:
         model = PerfilDeportivo
         fields = '__all__'
         read_only_fields = ['id', 'socio', 'created_at', 'updated_at']
+
+    def get_eligibility(self, obj):
+        return check_player_health(obj.id)
 
     def validate(self, data):
         # Additional validation if necessary
