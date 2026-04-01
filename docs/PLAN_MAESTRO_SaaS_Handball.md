@@ -575,7 +575,13 @@ Trazabilidad completa de acciones y Dashboards analíticos para la Comisión Dir
 - [x] **2026-04-01 13:46hs:** SOP Fase 6 redactado (`docs/FASE6_tesoreria_SOP.md`).
 - [x] **2026-04-01 13:46hs:** App `tesoreria` creada con modelos `CajaDiaria`, `PagoRecibido` y `ProductoMerchandising`.
 - [x] **2026-04-01 14:02hs:** Commit `feat(fase6)` completado y subido a la rama `dev`.
-- [ ] **PRÓXIMO PASO: Iniciar Fase 7 – Jornada Local y Cantina ("Somos Locales")**: Control de voluntarios, donaciones y caja comercial de partido.
+
+### FASE 7: JORNADA LOCAL Y CANTINA ("SOMOS LOCALES")
+- [x] **2026-04-01 14:03hs:** SOP Fase 7 redactado (`docs/FASE7_somos_locales_SOP.md`).
+- [x] **2026-04-01 14:04hs:** App `jornada_local` creada con modelos `Jornada`, `Voluntario`, `DonacionCantina` y `CajaJornada`.
+- [x] **2026-04-01 14:05hs:** Migraciones aplicadas y URLs registradas bajo `/api/v1/locales/`.
+- [x] **2026-04-01 14:06hs:** Commit `feat(fase7)` base pusheado a rama `dev`.
+- [ ] **PRÓXIMO PASO: Finalizar APIs de Jornada Local y Muro de Ayuda.**
 
 ---
 
