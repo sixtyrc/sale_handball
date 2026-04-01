@@ -52,6 +52,7 @@ INSTALLED_APPS = [
     'admin_club',
     'eventos',
     'tesoreria',
+    'jornada_local',
 ]
 
 MIDDLEWARE = [
