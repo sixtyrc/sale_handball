@@ -26,6 +26,7 @@ urlpatterns = [
     path('api/v1/deportes/', include('deportes.urls')),
     path('api/v1/admin-club/', include('admin_club.urls')),
     path('api/v1/actividad/', include('eventos.urls')),
+    path('api/v1/tesoreria/', include('tesoreria.urls')),
 ]
 
 if settings.DEBUG:

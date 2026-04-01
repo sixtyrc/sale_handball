@@ -30,7 +30,15 @@ class PerfilDeportivoViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated, IsFromClub]
 
     def get_queryset(self):
-        return PerfilDeportivo.objects.filter(socio__club=self.request.user.club)
+        user = self.request.user
+        base_qs = PerfilDeportivo.objects.filter(socio__club=user.club)
+        
+        # Si es profesor, limitamos a sus categorías asignadas (ramas)
+        if user.role == 'PROFESOR':
+            categorias_asignadas = user.asignaciones_categorias.values_list('categoria_id', flat=True)
+            return base_qs.filter(categoria_actual_id__in=categorias_asignadas)
+            
+        return base_qs
 
     def perform_create(self, serializer):
         socio_id = self.request.data.get('socio')

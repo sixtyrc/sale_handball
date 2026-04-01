@@ -120,3 +120,25 @@ class DocumentoDigital(models.Model):
         if self.fecha_vencimiento:
             return self.fecha_vencimiento < date.today()
         return False
+
+class AsignacionProfe(models.Model):
+    """
+    IMPORTANTE: Permite flexibilidad para que un profesor maneje 
+    varias categorías y ramas (Masculino/Femenino) a la vez.
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    usuario_profe = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='asignaciones_categorias')
+    categoria = models.ForeignKey(Categoria, on_delete=models.CASCADE, related_name='profesores_asignados')
+    
+    # Campo opcional para distinguir rol en el cuerpo técnico de esa categoría
+    rol_especifico = models.CharField(max_length=100, blank=True, null=True, help_text="Ej: Preparador Físico, Ayudante, Profe Principal")
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('usuario_profe', 'categoria')
+        verbose_name = "Asignación de Profesor"
+        verbose_name_plural = "Asignaciones de Profesores"
+
+    def __str__(self):
+        return f"{self.usuario_profe.email} -> {self.categoria}"

@@ -51,6 +51,7 @@ INSTALLED_APPS = [
     'deportes',
     'admin_club',
     'eventos',
+    'tesoreria',
 ]
 
 MIDDLEWARE = [
