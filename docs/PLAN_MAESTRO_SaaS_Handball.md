@@ -1,7 +1,21 @@
 # 🏆 PLAN MAESTRO – SaaS CLUB HANDBALL
-**Versión:** 1.7  
+**Versión:** 1.8  
 **Fecha:** 2026-04-01  
-**Estado:** ACTIVO – Memoria de credenciales habilitada  
+**Estado:** ACTIVO – Reglas Reales de Handball e Inyectado "Somos Locales"  
+
+---
+
+```
+
+---
+
+## 📋 REGLAS DE NEGOCIO REALES (HANDBALL)
+Estas reglas rigen la lógica de todo el sistema y fueron ajustadas según la operación real de los clubes:
+
+- **Multicategoría e Inclusión flexible**: Cada jugador tiene una categoría base (por edad/rama), pero puede ser convocado como **Refuerzo** en categorías superiores si el equipo no se completa. El sistema debe permitir convocar a cualquier socio del club a cualquier evento.
+- **Alertas de Gestión (Soft Warnings)**: El sistema nunca bloquea una convocatoria por falta de papeles. Si un jugador debe estudios médicos, seguro anual o tiene **mora (> 2 cuotas)**, se le muestra una alerta crítica al profesor/admin, pero se permite proceder para evitar parálisis administrativa en el campo de juego.
+- **Arbitraje Prorrateado**: El costo del arbitraje es fijo por partido (fijado por la asociación), pero se divide dinámicamente entre la cantidad de jugadores que asisten al partido.
+- **Módulo "Somos Locales" (Cantina/Entradas)**: Gestión integral de jornadas en casa. Control de voluntarios (padres/tutores), registro de donaciones para cantina y balance de caja específico por jornada comercial.
 
 ---
 
@@ -414,7 +428,26 @@ Trazabilidad completa de acciones y Dashboards analíticos para la Comisión Dir
 
 ---
 
-## FASE 7 – PWA POLISH Y OPTIMIZACIÓN MOBILE
+### FASE 7 – JORNADA LOCAL Y CANTINA ("SOMOS LOCALES")
+**Duración estimada:** 5-7 días  
+**Pre-requisito:** Fase 6 completa (Caja/Tesorería)  
+**Objetivo:** Gestionar la logística y economía de cuando el club juega de local.
+
+### Qué se construye
+1. **Gestión de Voluntarios**: Lista de tareas (Entradas, Cantina, Mesa, Limpieza) donde se asignan padres/tutores o colaboradores.
+2. **Control de Cantina**: Registro de productos y **Donaciones** (ej: "Familia Pérez donó 2 docenas de empanadas").
+3. **Caja de Jornada**: Balance rápido de ingresos (Entradas + ventas cantina) vs Egresos (Árbitros + viáticos).
+4. **Muro de Ayuda**: Visualización de qué familias están colaborando más para incentivar la participación.
+
+### Entregables
+- [ ] Modelo `JornadaLocal` (vínculo con Partidos).
+- [ ] Módulo de `DonacionesCantina`.
+- [ ] Sistema de asignación de `Voluntariado`.
+- [ ] Cierre de caja simplificado por evento.
+
+---
+
+## FASE 8 – PWA POLISH Y OPTIMIZACIÓN MOBILE
 **Duración estimada:** 3-5 días  
 **Pre-requisito:** Todas las fases anteriores  
 **Objetivo:** El sistema se siente como app nativa desde el celular

@@ -26,14 +26,16 @@ Desarrollar el módulo interactivo principal para los `PROFESOR` y `ADMIN`. Perm
 - Si el `PROFESOR` marca "Anotar en Cuenta", se genera un `MovimientoFinanciero` tipo TERCER_TIEMPO (Débito) en la `CuentaCorriente` del Socio.
 
 ## 3. LOGICA Y ENDPOINTS API
-- `GET /api/v1/eventos/` -> Lista filtrada por `club` y `categoria`.
-- `POST /api/v1/eventos/{id}/convocar/` -> Espera una lista de `socios_id`. Rechaza si alguno no tiene `puede_jugar`.
-- `POST /api/v1/eventos/{id}/asistencia/` -> Envío masivo de asistencia (Array de `{socio_id, estado}`).
-- `POST /api/v1/eventos/{id}/cobrar-3t/` -> Crea movimientos financieros atómicos para los asistentes.
+- `GET /api/v1/eventos/` -> Lista filtrada por `club`.
+- `POST /api/v1/eventos/{id}/convocar/` -> Permite convocar a cualquier socio del club (Refuerzos). **IMPORTANTE**: No bloquea, devuelve un array de advertencias (Mora, Apto, Seguro).
+- `POST /api/v1/eventos/{id}/asistencia/` -> Envío masivo de asistencia.
+- `POST /api/v1/eventos/{id}/cobrar-arbitraje/` -> Toma el monto fijo del árbitro y lo divide por cantidad de asistentes para generar débitos en Cta. Cta.
+- `POST /api/v1/eventos/{id}/cobrar-3t/` -> Crea movimientos financieros para los asistentes.
 
 ## 4. RESTRICCIONES Y CASOS BORDE (MEMORIA APRENDIZAJE)
-- **Roles:** El `PROFESOR` solo puede crear eventos / tomar asistencia de sus categorías asignadas. Por ahora, si es `PROFESOR` dejamos que opere sobre las categorías del club.
-- **Validación Estricta:** El endpoint de convocatoria DEBE interceptar y devolver Array de errores con los jugadores "No Habilitados" para partidos oficiales, bloqueando el guardado.
+- **Convocatoria Flexible (Refuerzos)**: El sistema permite convocar jugadores de cualquier categoría base a un evento para soportar el caso de refuerzos (Jose de menores juega en cadetes).
+- **Soft Warnings**: El endpoint de convocatoria intercepta y devuelve un listado de deudas o papeles faltantes, pero permite el guardado para no trabar la jornada deportiva.
+- **Arbitraje Dinámico**: Si el árbitro cobra $10.000 y asisten 10 jugadores, se les debita $1.000 a cada uno automáticamente.
 
 ---
 *Fin del documento SOP Fase 5.*

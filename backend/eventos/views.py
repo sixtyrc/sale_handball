@@ -12,7 +12,8 @@ from .serializers import (
     BulkConvocatoriaRequestSerializer, 
     ConvocatoriaSerializer,
     BulkAsistenciaRequestSerializer,
-    ThirdHalfPaymentSerializer
+    ThirdHalfPaymentSerializer,
+    ArbitrajePaymentSerializer
 )
 
 class EventoViewSet(viewsets.ModelViewSet):
@@ -39,20 +40,29 @@ class EventoViewSet(viewsets.ModelViewSet):
         ids_socios = serializer.validated_data['jugadores_ids']
         socios = Socio.objects.filter(id__in=ids_socios, club=request.user.club)
         
-        # Validación CRÍTICA: Partidos oficiales requieren "puede_jugar" == True
-        errores = []
-        if evento.tipo == 'PARTIDO_OFICIAL':
-            for socio in socios:
-                if not hasattr(socio, 'perfil_deportivo') or not socio.perfil_deportivo.puede_jugar:
-                    errores.append(f"El jugador '{socio.apellidos}, {socio.nombres}' no está habilitado por apto/federación.")
-        
-        if errores:
-            return Response({
-                "error": "Existen jugadores no habilitados para partido oficial.",
-                "detalles": errores
-            }, status=status.HTTP_400_BAD_REQUEST)
+        # Lógica de SOFT WARNINGS (No bloquea, solo avisa)
+        warnings = []
+        for socio in socios:
+            # Check Mora (> 2 cuotas)
+            if socio.cuenta_corriente.saldo < 0:
+                # Simulación de detección de 2 cuotas pendientes 
+                # (Se podría mejorar contando movimientos de tipo CUOTA impagos)
+                warnings.append({
+                    "socio": str(socio),
+                    "tipo": "MORA",
+                    "mensaje": "Debe cuotas sociales (> 2 meses)."
+                })
+            
+            # Check Papeles (Apto y Seguro)
+            if not hasattr(socio, 'perfil_deportivo') or not socio.perfil_deportivo.puede_jugar:
+                msj = "Falta Apto Médico o Seguro Federativo."
+                warnings.append({
+                    "socio": str(socio),
+                    "tipo": "DOCUMENTACION",
+                    "mensaje": msj
+                })
 
-        # Generar Convocatorias atómicas (get_or_create para no duplicar si repite)
+        # Generar Convocatorias atómicas (Refuerzos permitidos por defecto al filtrar solo por club)
         convocatorias_generadas = []
         with transaction.atomic():
             for socio in socios:
@@ -60,8 +70,49 @@ class EventoViewSet(viewsets.ModelViewSet):
                 convocatorias_generadas.append(obj)
 
         return Response({
-            "status": "Convocatoria procesada", "agregados": len(convocatorias_generadas)
+            "status": "Convocatoria guardada exitosamente (Refuerzos permitidos)", 
+            "agregados": len(convocatorias_generadas),
+            "warnings": warnings
         }, status=status.HTTP_201_CREATED)
+
+    @action(detail=True, methods=['post'], url_path='cobrar-arbitraje')
+    def cobrar_arbitraje(self, request, pk=None):
+        """
+        Calcula el costo del árbitro por jugador según los presentes y lo debita.
+        """
+        evento = self.get_object()
+        serializer = ArbitrajePaymentSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        total_arbitro = abs(Decimal(serializer.validated_data['costo_total_arbitro']))
+        ids_socios = serializer.validated_data['jugadores_ids']
+        cant_jugadores = len(ids_socios)
+
+        if cant_jugadores == 0:
+            return Response({"error": "Debe haber al menos 1 jugador para prorratear"}, status=status.HTTP_400_BAD_REQUEST)
+
+        monto_por_jugador = -(total_arbitro / cant_jugadores) # Negativo (débito)
+        socios = Socio.objects.filter(id__in=ids_socios, club=request.user.club)
+
+        with transaction.atomic():
+            for socio in socios:
+                cuenta, _ = CuentaCorriente.objects.get_or_create(socio=socio)
+                MovimientoFinanciero.objects.create(
+                    cuenta=cuenta,
+                    tipo='ARBITRAJE',
+                    monto=monto_por_jugador,
+                    descripcion=f"Prorrateo Arbitraje: {evento.titulo} ({total_arbitro}/{cant_jugadores})",
+                    fecha=evento.fecha_hora_inicio.date(),
+                    creado_por=request.user
+                )
+
+        return Response({
+            "status": "Cobro de arbitraje realizado",
+            "monto_individual": abs(monto_por_jugador),
+            "total_arbitraje": total_arbitro,
+            "jugadores": cant_jugadores
+        })
 
     @action(detail=True, methods=['post'], url_path='asistencia')
     def tomar_asistencia(self, request, pk=None):

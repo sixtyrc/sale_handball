@@ -53,3 +53,11 @@ class ThirdHalfPaymentSerializer(serializers.Serializer):
         allow_empty=False,
         help_text="Jugadores a los que se les debitará en la cuenta corriente"
     )
+
+class ArbitrajePaymentSerializer(serializers.Serializer):
+    costo_total_arbitro = serializers.DecimalField(max_digits=10, decimal_places=2, help_text="Monto total fijado por la asociación")
+    jugadores_ids = serializers.ListField(
+        child=serializers.UUIDField(),
+        allow_empty=False,
+        help_text="Jugadores presentes que dividirán el costo"
+    )
