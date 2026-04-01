@@ -517,7 +517,14 @@ Trazabilidad completa de acciones y Dashboards analíticos para la Comisión Dir
 - [x] **2026-04-01 12:50hs:** Signal auto-crea `CuentaCorriente` al crear un `Socio`.
 - [x] **2026-04-01 12:50hs:** APIs: cuenta por socio, registrar movimiento, cuotas masivas, saldo inicial histórico.
 - [x] **2026-04-01 12:50hs:** Commit `feat(fase2)` pusheado a rama `dev` en GitHub.
-- [ ] **PRÓXIMO PASO: Iniciar Fase 3 – Módulo Deportivo y Perfiles**: App deportes, perfiles de jugador, categorías.
+
+### FASE 3: MÓDULO DEPORTIVO Y PERFILES
+- [x] **2026-04-01 12:51hs:** SOP Fase 3 redactado y guardado en `docs/FASE3_deportes_SOP.md`.
+- [x] **2026-04-01 12:53hs:** Modelos `Categoria`, `PerfilDeportivo` y `DocumentoDigital` creados (con manejo de medios en local).
+- [x] **2026-04-01 12:53hs:** Funciones decoradas `@property` para chequeo en tiempo real de apto médico y habilitación.
+- [x] **2026-04-01 12:55hs:** API viewsets conectados bajo `/api/v1/deportes/` con filtro IsFromClub.
+- [x] **2026-04-01 13:00hs:** Commit `feat(fase3)` pusheado a la rama `dev`.
+- [ ] **PRÓXIMO PASO: Iniciar Fase 4 – Administración y Configuración Extendida**: Manejo de temporadas, costos de cuota y configuración de branding.
 
 ---
 

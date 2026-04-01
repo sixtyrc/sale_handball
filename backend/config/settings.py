@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     'core',
     'finanzas',
     'deportes',
+    'admin_club',
 ]
 
 MIDDLEWARE = [
