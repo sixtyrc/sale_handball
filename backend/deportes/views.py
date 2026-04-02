@@ -63,7 +63,9 @@ class DocumentoDigitalViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         socio_id = self.request.data.get('socio')
         socio = get_object_or_404(Socio, id=socio_id, club=self.request.user.club)
-        serializer.save(socio=socio, subido_por=self.request.user)
+        # Auto-aprobar si lo carga un ADMIN, DIRIGENTE o PROFESOR
+        estado = 'APROBADO' if self.request.user.role in ['ADMIN', 'DIRIGENTE', 'PROFESOR'] else 'PENDIENTE'
+        serializer.save(socio=socio, subido_por=self.request.user, estado_validacion=estado)
 
     @action(detail=True, methods=['post'], url_path='validar')
     def validar_documento(self, request, pk=None):

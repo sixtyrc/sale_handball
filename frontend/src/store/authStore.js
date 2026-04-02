@@ -6,7 +6,7 @@ const api = axios.create({
 });
 
 export const useAuthStore = create((set) => ({
-  user: null,
+  user: JSON.parse(localStorage.getItem('user')) || null,
   token: localStorage.getItem('token') || null,
   isAuthenticated: !!localStorage.getItem('token'),
   env: import.meta.env.VITE_APP_ENV || 'dev',
@@ -17,6 +17,7 @@ export const useAuthStore = create((set) => ({
       const response = await api.post('login/', { username, password });
       const { access, user } = response.data;
       localStorage.setItem('token', access);
+      localStorage.setItem('user', JSON.stringify(user));
       set({ user, token: access, isAuthenticated: true });
       return { success: true };
     } catch (error) {
@@ -26,6 +27,7 @@ export const useAuthStore = create((set) => ({
 
   logout: () => {
     localStorage.removeItem('token');
+    localStorage.removeItem('user');
     set({ user: null, token: null, isAuthenticated: false });
   },
 }));

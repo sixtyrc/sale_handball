@@ -19,12 +19,12 @@ class ClubConfigView(views.APIView):
 
     def get(self, request):
         config, created = ClubConfig.objects.get_or_create(club=request.user.club)
-        serializer = ClubConfigSerializer(config)
+        serializer = ClubConfigSerializer(config, context={'request': request})
         return Response(serializer.data)
 
     def put(self, request):
         config, created = ClubConfig.objects.get_or_create(club=request.user.club)
-        serializer = ClubConfigSerializer(config, data=request.data, partial=True)
+        serializer = ClubConfigSerializer(config, data=request.data, partial=True, context={'request': request})
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)

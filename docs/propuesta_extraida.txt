@@ -1,0 +1,269 @@
+Sistema integral para Club de Handball
+Diseño funcional, arquitectura de negocio, UX/PWA, casos de uso, skills de IA y roadmap de implementación
+1. Resumen ejecutivo
+El sistema propuesto unifica en una sola plataforma la gestión administrativa del club, la operación deportiva del handball y la experiencia de autogestión para socios, tutores y cuerpo técnico. El corazón funcional no es una simple “cuota mensual”, sino una cuenta corriente deportiva por persona y por grupo familiar, con saldos de arrastre, débitos automáticos por conceptos periódicos y extraordinarios, control de mora, convenios de pago, seguro anual, fichaje, apto médico, partidos, estadísticas y fixtures.
+La solución debe ser “mobile first” y PWA real: navegación simple, carga rápida, formularios pensados para pantalla chica, uso intensivo desde cancha y escritorio administrativo, y posibilidad de operar con conectividad limitada en ciertos escenarios. También debe tener trazabilidad completa mediante auditoría, perfiles robustos y parametrización por temporada, categoría, rama y competencia.
+Desde la perspectiva deportiva, el sistema debe comprender particularidades del handball: planteles por categoría, posiciones de juego, mano hábil, puesto principal/secundario, fichas médicas anuales, seguros obligatorios, control de asistencia a partidos, listas de buena fe, arbitral por fecha, terceros tiempos, estadísticas por jugador y por equipo, y generación de fixtures compatibles con formatos habituales del deporte.
+2. Hallazgos de dominio que impactan el diseño
+Se relevaron lineamientos del ecosistema oficial del handball argentino e internacional para fundamentar reglas de negocio, datos y parametrizaciones del sistema.
+Las Reglas de Juego de la IHF establecen que un equipo puede tener hasta 14 jugadores y hasta 7 en cancha al mismo tiempo, dato clave para planteles, listas de partido y validaciones del módulo deportivo. [F1]
+La CAH publica secciones formales de administración, entre ellas pago anual por jugador/a, pases interfederativos y membresías, lo que refuerza la necesidad de conceptos económicos parametrizables y asociados a federación/temporada. [F2]
+El REGOI de la CAH incluye modelos de autorización de padres/tutores para menores, planillas de datos generales e instructivos y controles para eventos, lo que respalda la inclusión de datos de responsables, autorizaciones, documentación y checklists operativos. [F3]
+Fe.Me.Bal. expone secciones de seguros, boletines y aranceles, reglamentos y torneos/fixtures; además, su reseña institucional destaca seguro obligatorio para la totalidad de los jugadores registrados. [F4]
+El entorno federativo publica aranceles arbitrales y federativos por temporada, por lo que los cobros por fecha, arbitral, fichajes, pases y conceptos extraordinarios no deben codificarse “fijo”: deben ser parametrizados, versionados y auditables. [F5]
+3. Objetivos de negocio
+4. Principios rectores del sistema
+Cuenta corriente real por persona y por grupo familiar, con saldo inicial y arrastre histórico.
+Modelo multi-temporada: el sistema debe conservar historia y abrir nuevos ciclos sin perder deuda ni estadísticas.
+Parametrización fuerte: cuotas, arbitral, terceros tiempos, seguros, aranceles, recargos y políticas de mora deben ser configurables.
+Perfil único de persona: un mismo individuo puede ser socio, jugador, tutor, profesor, administrativo o dirigente según contexto.
+Separación entre datos maestros y hechos: personas, categorías y conceptos por un lado; cuotas, pagos, asistencias y partidos por otro.
+Trazabilidad completa: toda modificación sensible debe quedar auditada con antes/después, usuario, fecha, dispositivo y motivo.
+UX enfocada en móvil: tareas frecuentes resueltas en pocos toques, con grandes objetivos táctiles y lectura perfecta en cancha.
+5. Alcance funcional general
+6. Modelo conceptual de actores y roles
+7. Módulo de socios y legajo integral
+Datos personales: nombre, apellido, DNI, fecha de nacimiento, sexo, domicilio, localidad, teléfonos, email, foto, observaciones.
+Datos administrativos: número de socio, fecha de alta, estado, motivo de baja, categoría societaria, grupo familiar, sede/filial.
+Datos del jugador: rama, categoría, posición principal, posición secundaria, mano hábil, dorsal, talla de indumentaria, ficha federativa.
+Datos médicos: apto médico anual, fecha de vencimiento, cobertura, alergias, medicación, restricciones, contacto de emergencia.
+Menores: padre/madre/tutor/responsable, parentesco, documentos, teléfonos, email, autorizaciones, quién recibe notificaciones.
+Documentación digital: DNI, apto, autorización, seguro, ficha de inscripción, consentimiento de imagen, certificado de alumno si aplica.
+8. Cuenta corriente, cuotas y mora
+El sistema debe comportarse como una cuenta corriente institucional, no como una mera lista de cuotas. Cada persona o grupo familiar debe tener un saldo de apertura, movimientos de débito, movimientos de crédito, saldo acumulado y posibilidad de arrastre interanual.
+9. Política recomendada de conceptos económicos
+Para evitar rigidez, todo concepto cobrable debe existir como entidad parametrizable con vigencia, fórmula, obligatoriedad, frecuencia y condición de aplicación. Ejemplos:
+Cuota mensual por categoría o por condición de socio.
+Seguro anual obligatorio del jugador.
+Arbitral por fecha de liga o por convocatoria efectiva.
+Tercer tiempo o evento social/deportivo extraordinario.
+Reinscripción anual y ficha federativa.
+Indumentaria o kit de inicio de temporada.
+Multas disciplinarias o costos administrativos autorizados por reglamento interno.
+10. Menores de edad, tutores y consentimiento
+Dado que en handball de base existe un volumen importante de menores, el sistema debe tratar al menor como jugador/socio y al tutor como responsable económico, administrativo y, según configuración, de comunicación.
+Un menor puede tener uno o varios responsables asociados, con prioridad de contacto y rol específico.
+El responsable puede consultar, pagar y descargar comprobantes del menor según permisos.
+Debe existir autorización para viajes, atención médica de emergencia y consentimiento de uso de imagen/documentación.
+El sistema debe alertar aptos médicos o autorizaciones vencidas antes de cada partido o evento.
+11. Ficha médica y seguro anual
+El sistema debe soportar la lógica de control sanitario anual y seguro obligatorio del jugador, con vencimientos y bloqueos configurables. En la práctica, esto impacta la habilitación para entrenar, viajar o jugar.
+12. Módulo deportivo específico de handball
+Además del legajo administrativo, el jugador requiere atributos técnicos y de seguimiento deportivo propios del handball. Este módulo debe permitir construir historial individual y colectivo.
+13. Partidos, convocatorias y planillas
+Alta de torneo, campeonato, fase, zona, fecha, rival, condición local/visitante, sede, horario y categoría.
+Convocatoria de jugadores con control de habilitación: deuda, apto médico, seguro, documentación, sanciones.
+Lista de partido con dorsales, titulares, suplentes, arquero titular/suplente, ausentes y cuerpo técnico.
+Carga de incidencias: goles, asistencias, penales convertidos/errados, exclusiones, amonestaciones, tarjetas, descalificaciones, pérdidas, recuperos, atajadas, minutos jugados.
+Registro económico asociado al partido: arbitral, mesa de control, terceros tiempos, transporte y otros gastos o cargos a socios.
+Cierre de partido con validación, observaciones del entrenador y, opcionalmente, firma digital simple del responsable.
+14. Estadísticas recomendadas
+15. Fixtures y competencia
+El módulo de fixtures debe ser flexible. En handball aparecen formatos por zonas, todos contra todos, playoffs, triangulares, cuadrangulares y cruces por ranking. El REGOI de la CAH incluye criterios y esquemas de clasificación por zonas/rankings, lo que sugiere diseñar un generador parametrizable y no rígido. [F3]
+Todos contra todos simple o doble rueda.
+Zonas con ranking inicial y cruces posteriores.
+Playoff por llaves con ida/vuelta o partido único.
+Reclasificación por puestos y copas paralelas.
+Control de feriados, indisponibilidad de sede y restricción horaria.
+Exportación amigable para compartir fixture en móvil y redes internas.
+16. Experiencia UX/UI y PWA
+El sistema debe sentirse nativo en el celular. La prioridad no es “adaptar una web de escritorio”, sino concebir el producto desde los flujos reales de secretaría, cancha y familia.
+17. Backoffice y tableros
+Dashboard de mora: deuda total, deuda vencida, top deudores, deuda por categoría, por tutor y por concepto.
+Dashboard societario: activos, inactivos, nuevos del mes, bajas, documentación vencida, aptos próximos a vencer.
+Dashboard deportivo: habilitados vs. inhabilitados, convocatorias, disponibilidad, estadísticas agregadas.
+Dashboard económico: recaudación por período, por concepto, por medio de pago, por categoría y por evento.
+Dashboard de riesgo operativo: jugadores sin seguro, sin apto, sin autorización, sin pago de arbitral, sancionados.
+18. Auditoría y seguridad
+19. Entidades maestras sugeridas
+A nivel funcional, el sistema debería contemplar al menos las siguientes entidades maestras y de negocio. No se detalla código ni esquema SQL, pero sí el mapa conceptual.
+Persona, Socio, Jugador, Tutor/Responsable, Grupo Familiar, Contacto de Emergencia
+Categoría, Rama, Posición, Temporada, Torneo, Fase, Zona, Equipo, Plantel
+Documento, Apto Médico, Seguro, Ficha Federativa, Autorización
+Concepto Cobrable, Regla de Mora, Lista de Precios, Movimiento de Cuenta, Pago, Recibo, Convenio, Ajuste
+Partido, Convocatoria, Planilla, Estadística Individual, Estadística de Equipo, Sanción, Lesión
+Usuario, Rol, Permiso, Sesión, Evento de Auditoría, Notificación, Configuración Institucional
+20. Reglas de negocio críticas
+21. Casos de uso principales
+22. Casos de uso detallados por etapa
+22.1 Etapa administrativa base
+Alta, edición y baja lógica de socios.
+Alta de responsables y consolidación de grupo familiar.
+Carga de saldo inicial y arrastre histórico.
+Generación de cuotas, pagos y recibos.
+Consulta de mora y reportes básicos.
+22.2 Etapa sanitaria y documental
+Gestión de apto médico, seguro, autorizaciones y vencimientos.
+Bloqueos o alertas de habilitación deportiva.
+Portal tutor para carga/control documental.
+22.3 Etapa deportiva operativa
+Planteles, categorías, convocatorias, lista de partido y estadísticas básicas.
+Registro de arbitral y costos de fecha.
+Reportes de disponibilidad y habilitación por partido.
+22.4 Etapa analítica y expansión
+Fixture avanzado, dashboards, comparativas intertemporada y análisis de rendimiento.
+Automatizaciones, notificaciones inteligentes y sugerencias asistidas por IA.
+23. Etapas de implementación recomendadas
+24. Arquitectura funcional del producto (sin código)
+Backend Python: dominio, reglas de negocio, seguridad, auditoría, APIs y procesos programados. Frontend React: experiencia PWA, paneles por rol, formularios optimizados para móvil, tableros y flujos de autogestión. PostgreSQL: persistencia transaccional, histórico, auditoría y consultas analíticas. El backend no debe depender de reglas hardcodeadas de club o federación; la mayoría debe residir en tablas/configuración versionable.
+25. Skills de IA recomendados para construir el sistema
+A continuación se propone un set de skills especializados para un agente de IA que participe en el desarrollo. Cada skill representa un encuadre de trabajo reutilizable, no código.
+26. Memorias que el agente de IA debe conservar
+Configuración institucional: nombre del club, sedes, colores, ramas, categorías activas, políticas administrativas.
+Modelo de cobranza: qué conceptos existen, cómo se calculan, a quién aplican, vencimientos, recargos y becas.
+Reglas de habilitación: combinaciones de deuda, apto, seguro, documentación y sanciones que bloquean o advierten.
+Dominio handball: puestos, planilla estadística elegida, formato de fixture, lógica por categoría y competencia.
+Decisiones UX: patrón de navegación, componentes críticos, prioridades mobile-first y convenciones de validación.
+Mapa de permisos: qué puede hacer cada rol y qué datos sensibles debe o no ver.
+Roadmap vigente: fase actual, backlog priorizado, decisiones ya tomadas y pendientes abiertos.
+27. Prompt maestro para el agente principal
+Actuá como arquitecto de software senior, analista funcional especializado en clubes deportivos y experto en handball. Tu objetivo es diseñar y evolucionar un sistema de gestión integral para un club de handball con backend Python, frontend React y PostgreSQL. Priorizá exactitud funcional, mobile-first PWA, seguridad, auditoría, modularidad y trazabilidad. Nunca inventes reglas del negocio si no están definidas: proponé alternativas y explicitá impactos. Tratá la cobranza como cuenta corriente con arrastre histórico y el módulo deportivo como operación real de handball, incluyendo categorías, posiciones, mano hábil, planillas, estadísticas y fixtures. Respetá estrictamente las memorias activas del proyecto y trabajá por fases, con entregables claros, sin generar código salvo pedido expreso.
+28. Prompts especializados por skill
+29. Prompt para generación de backlog por fases
+Usá el contexto actual del proyecto y armá un backlog priorizado para la próxima fase. Cada ítem debe incluir: nombre, problema que resuelve, usuario destinatario, dependencias, riesgo, valor, complejidad relativa, criterio de aceptación y definición de terminado. Ordenalo por impacto real en un club de handball, no por conveniencia técnica.
+30. Prompt para revisión de calidad antes de desarrollar
+Revisá esta especificación como si fueras CTO + analista funcional + coordinador deportivo. Marcá inconsistencias, ausencias críticas, decisiones ambiguas, riesgos de UX móvil, reglas de negocio no resueltas y dependencias federativas o reglamentarias que deberían parametrizarse.
+31. Plan de memoria operacional para el agente
+32. Riesgos frecuentes del proyecto
+Mezclar lógica administrativa y deportiva sin un modelo unificado de persona/jugador/tutor.
+Codificar importes y reglas federativas en lugar de parametrizarlas.
+No prever arrastre de deuda histórica ni saldo inicial de implantación.
+Diseñar interfaces demasiado “de escritorio” que fracasen en el uso diario de celular.
+No definir con precisión qué bloquea jugar y qué solo genera advertencia.
+No contemplar auditoría fina sobre cambios de deuda, becas, pagos, estado médico o habilitación.
+Crear estadísticas demasiado complejas para cargar en cancha; debe existir modo rápido y modo detallado.
+33. Recomendaciones finales de implementación
+Empezar por el núcleo administrativo-financiero y habilitación documental; eso ordena el club desde el día uno.
+Definir un catálogo de conceptos cobrables y sus reglas antes de construir automatizaciones.
+Prototipar primero en móvil los 10 flujos más usados: cobrar, buscar socio, ver deuda, cargar apto, convocar, cargar planilla.
+Separar “parametrización institucional” de “operación diaria” para evitar errores masivos.
+Diseñar la implantación con migración asistida y verificación manual de saldos históricos.
+Validar con entrenadores una planilla estadística realista, útil y sostenible de cargar.
+34. Conclusión
+El sistema ideal para un club de handball no es solamente un software de socios ni solamente una app deportiva: es una plataforma institucional que integra tesorería, familia, salud, competencia, estadísticas y gobierno interno. Cuando se diseña bien, reduce mora, mejora la organización, profesionaliza la operación y le da al socio/tutor una percepción moderna y confiable del club.
+La combinación propuesta —Python + React + PostgreSQL + PWA— es adecuada para construir una solución robusta, escalable y enfocada en móvil. Pero el factor decisivo no será la tecnología, sino la calidad del modelo funcional, la parametrización de reglas y el uso disciplinado de skills, memorias y prompts en el agente de IA que acompañe el desarrollo.
+35. Referencias y fundamento documental
+[F1] International Handball Federation (IHF), Rules of the Game for Indoor Handball, edición vigente consultada. Dato utilizado: composición de equipo y cantidad máxima en cancha.
+[F2] Confederación Argentina de Handball (CAH), secciones oficiales de Administración: pago anual por jugador/a, pases interfederativos y membresías.
+[F3] Confederación Argentina de Handball (CAH), REGOI v2024: anexos con autorización de padres/tutores para menores, planillas de datos generales e instructivos/reglamentos de torneos.
+[F4] Federación Metropolitana de Balonmano (Fe.Me.Bal.), portal institucional con secciones de Seguros, Boletines y Aranceles, Reglamentos y Competencias, Torneos & Fixtures.
+[F5] Fe.Me.Bal., publicaciones de aranceles arbitrales y aranceles federativos/pases de temporada 2026, utilizadas para justificar parametrización y versionado de conceptos.
+Stack objetivo | Backend Python + Frontend React + PostgreSQL + PWA 100% mobile-first
+Enfoque | Administración de socios + operación deportiva + estadísticas + autogestión + auditoría
+Destinatarios | Comisión directiva, administración, profesores, entrenadores, socios y tutores
+Entregable | Documento maestro sin código, listo para orientar a un agente de IA y a un equipo de desarrollo
+Este documento fue diseñado para servir como base profesional de producto, análisis funcional, UX y prompt engineering para el desarrollo asistido por IA. Los importes, seguros, aranceles arbitrales y normativas operativas deben ser parametrizables, ya que las federaciones y asociaciones los actualizan periódicamente.
+Elemento | Definición profesional
+Unificar socios y deporte | Evitar sistemas separados entre secretaría, tesorería y profesores. Un mismo legajo debe servir para cobranza, ficha médica, asistencia, competencia y comunicación.
+Reducir mora | Automatizar vencimientos, recordatorios, recargos, convenios y tablero de morosidad para que la gestión no dependa de planillas manuales.
+Mejorar control institucional | Tener visibilidad de altas, bajas, documentación vencida, seguro, jugadores habilitados, deuda y cambios auditados.
+Potenciar autogestión | Permitir que socio/tutor vea cuenta corriente, pagos, comprobantes, documentos pendientes, próximos partidos y estado administrativo.
+Profesionalizar lo deportivo | Transformar planillas de partido y registros técnicos en datos explotables para estadísticas, seguimiento y decisiones.
+Módulo | Alcance
+Administración de socios | Legajo, grupo familiar, tutores, documentación, apto médico, seguros, estado activo/inactivo, historial.
+Tesorería y cuotas | Conceptos periódicos y extraordinarios, mora, recargos, convenios, recibos, saldo inicial, cuenta corriente.
+Deporte / handball | Planteles, categorías, posiciones, mano hábil, dorsal, fichajes, disponibilidad, habilitación, asistencia.
+Partidos y competencia | Calendario, convocatorias, planilla, estadísticas, sanciones, control arbitral, terceros tiempos, fixture.
+Portal socio/tutor | Estado de cuenta, comprobantes, vencimientos, documentación pendiente, ficha médica, agenda deportiva.
+Backoffice institucional | Auditoría, tableros, permisos, parametrización de temporada, federación, conceptos y reglas.
+Rol | Capacidades principales
+Administrador general | Control total del sistema, parámetros, seguridad, auditoría, cierres, temporadas y reportes.
+Personal administrativo | Alta y edición de socios, cobranza, gestión de deuda, emisión de recibos, documentación y seguimiento.
+Profesor / entrenador | Gestión técnica de planteles, asistencias, convocatorias, estadísticas, observaciones y fichas deportivas.
+Socio jugador mayor | Consulta de cuenta, pagos, documentos, partidos y notificaciones según permisos.
+Tutor / responsable | Gestión y consulta de menores a cargo, deuda, pagos, autorizaciones, ficha médica y documentación.
+Dirigente / comisión | Acceso a tableros, mora, masa societaria, reportes deportivos y financieros, sin necesidad de editar todo.
+Recomendación profesional: separar permisos por “módulo + acción + alcance”. Ejemplo: ver socios, editar legajo, imputar pago, aprobar descuento, ver auditoría, cerrar temporada, cargar estadística, exportar. No depender solo del nombre del rol.
+Componente | Comportamiento esperado
+Saldo inicial de ciclo | Permite comenzar a usar el sistema partiendo de una deuda o saldo a favor preexistente.
+Conceptos periódicos | Cuota mensual, cuota social, seguro anual prorrateado, mantenimiento, etc.
+Conceptos extraordinarios | Tercer tiempo, arbitral por partido, viajes, rifas, indumentaria, multas, pases, fichajes.
+Recargos y mora | Porcentaje, monto fijo, gracia, mora automática o manual, suspensión de habilitación deportiva.
+Aplicación de pagos | A concepto específico, a deuda más vieja, distribución automática, pago parcial o pago a cuenta.
+Convenios | Plan de regularización con cuotas y calendario propio, sin perder trazabilidad del origen de la deuda.
+Créditos y ajustes | Bonificaciones, becas, descuentos familiares, condonaciones parciales, refacturaciones.
+Recomendación clave: los importes y reglas por federación/competencia deben versionarse por temporada y nunca sobrescribir el histórico. El sistema debe poder decir cuánto valía un arbitral en cada fecha del pasado.
+Dato | Definición
+Apto médico | Fecha de emisión, vencimiento, profesional, archivo adjunto, observaciones, apto restringido o total.
+Cobertura | Obra social/prepaga/seguro, número de afiliado, contacto, prestador.
+Seguro deportivo | Aseguradora, póliza/certificado, vigencia, estado de pago, comprobante y cobertura declarada.
+Alertas | Próximo a vencer, vencido, incompleto, pendiente de validación.
+Impacto operativo | Definir si bloquea convocatoria, ficha de partido, entrenamiento o solo genera advertencia.
+Campo | Uso funcional
+Categoría | Mini, infantiles, menores, cadetes, juveniles, mayores u otras definidas por la institución/federación.
+Rama | Masculina, femenina, mixta cuando aplique.
+Posición principal | Arquero, extremo izquierdo, extremo derecho, lateral izquierdo, lateral derecho, central, pivote.
+Posición secundaria | Permite versatilidad táctica y mejor análisis del plantel.
+Brazo/mano hábil | Derecha, izquierda, ambidiestro. Muy relevante para puestos laterales, extremos y evaluación táctica.
+Perfil técnico | Velocidad, lanzamiento, defensa, pase, 1 vs 1, visión de juego, contraataque, lectura táctica.
+Disponibilidad | Apto para jugar, lesionado, suspendido, no habilitado administrativamente, ausente, convocable.
+Nivel | Indicadores
+Jugador | Partidos jugados, convocado/no convocado, minutos, goles, % de efectividad, penales, exclusiones, asistencias, sanciones, disponibilidad.
+Arquero | Atajadas totales, % de atajadas, penales atajados, goles recibidos, rendimiento por tiempo.
+Equipo | Goles a favor/en contra, parciales, eficacia de ataque, pérdidas, recuperos, inferioridades, superioridades, rendimiento local/visitante.
+Plantel | Asistencia a entrenamientos, ausentismo, lesionados, suspensiones, rotación por posición.
+Administrativo-deportivo | Jugadores habilitados vs. inhabilitados por deuda, apto o seguro.
+Principio UX | Aplicación concreta
+Home por rol | Cada rol entra a un dashboard distinto: administrativo ve cobranzas y vencimientos; profesor ve entrenamientos, plantel y próximos partidos; socio/tutor ve cuenta y agenda.
+Acciones rápidas | Cobrar, buscar socio, cargar asistencia, convocar plantel, ver vencidos, emitir recibo, registrar gasto de partido.
+Diseño mobile-first | Tarjetas, tabs cortas, formularios por pasos, teclado contextual, botones amplios, lectura sin zoom.
+PWA real | Instalable, caché inteligente, acceso directo, icono, arranque rápido, tolerancia a red inestable.
+Accesibilidad | Contraste, tamaño táctil, validaciones claras, estados vacíos comprensibles, errores accionables.
+Experiencia en cancha | Modo carga rápida de planilla y estadísticas, idealmente con formularios de un toque y guardado continuo.
+Capa | Recomendación
+Auditoría de datos | Guardar entidad, campo, valor anterior, valor nuevo, usuario, fecha/hora, IP/dispositivo, motivo.
+Auditoría operativa | Login, logout, intentos fallidos, desbloqueos, exportaciones, eliminaciones lógicas, cierres.
+Seguridad funcional | Permisos finos por rol, alcance por categoría/sede y bloqueo de acciones críticas.
+Privacidad | Resguardar datos de menores, médicos y financieros con permisos diferenciados y minimización de exposición.
+Integridad | Soft delete, historial, versionado de parámetros y trazabilidad de recibos/comprobantes.
+ID | Regla
+RN-01 | No se puede perder deuda histórica al iniciar una nueva temporada.
+RN-02 | Un socio menor no puede quedar sin al menos un responsable activo.
+RN-03 | La cuenta corriente puede operar por persona o consolidarse por grupo familiar según configuración.
+RN-04 | Los conceptos extraordinarios pueden generarse manualmente, masivamente o por evento deportivo.
+RN-05 | La habilitación deportiva puede depender de deuda, apto, seguro, ficha federativa y sanciones.
+RN-06 | Todo cambio en importes, becas, descuentos, estados y documentación sensible debe auditarse.
+RN-07 | Los parámetros económicos deben ser versionables por vigencia, temporada y competencia.
+RN-08 | Un pago puede imputarse parcial o totalmente y debe conservar su trazabilidad contable/operativa.
+RN-09 | Una planilla de partido cerrada no debería editarse libremente; requiere permiso especial o reapertura auditada.
+RN-10 | La estadística deportiva no debe cargarse para jugadores no convocados salvo permiso de corrección.
+ID | Caso de uso | Actor principal | Resultado esperado
+CU-01 | Alta de socio/jugador | Administrativo | Crear legajo completo, adjuntar documentos y asociar tutor si es menor.
+CU-02 | Registrar saldo inicial | Administrativo | Migrar deuda/saldo previo al inicio del uso del sistema.
+CU-03 | Generar cuotas mensuales | Administrador/Administrativo | Emitir débitos masivos por padrón y reglas vigentes.
+CU-04 | Registrar pago | Administrativo | Cobrar, imputar y emitir recibo/comprobante.
+CU-05 | Aplicar recargo de mora | Sistema/Administrador | Calcular intereses o penalidades según reglas.
+CU-06 | Ver estado de cuenta | Socio/Tutor | Consultar saldo, movimientos, vencimientos y comprobantes.
+CU-07 | Actualizar apto y seguro | Administrativo/Tutor | Subir documentación anual y validar vigencias.
+CU-08 | Convocar partido | Profesor | Seleccionar jugadores habilitados y generar lista de partido.
+CU-09 | Cargar planilla y estadísticas | Profesor/Asistente | Registrar resultado e incidencias deportivas.
+CU-10 | Generar fixture | Administrador deportivo | Crear calendario según formato del torneo.
+CU-11 | Auditar modificación | Administrador general | Revisar cambios sensibles y responsable de cada acción.
+CU-12 | Abrir nueva temporada | Administrador general | Configurar ciclo nuevo conservando deuda e historial.
+Fase | Nombre | Entrega principal
+Fase 0 | Descubrimiento y reglas | Workshops, relevamiento de cuotas, mora, categorías, documentos, aranceles y operación deportiva.
+Fase 1 | Core administrativo | Socios, responsables, saldo inicial, cuenta corriente, pagos, recibos y roles básicos.
+Fase 2 | Documentación y habilitación | Apto médico, seguro, fichas, alertas y portal tutor/socio.
+Fase 3 | Operación deportiva | Planteles, partidos, convocatorias, planilla y estadísticas esenciales.
+Fase 4 | Competencia y fixtures | Torneos, fases, zonas, ranking, generador de calendario y reportes técnicos.
+Fase 5 | Analítica e IA | Dashboards, copilotos, recomendaciones, automatizaciones y mejora continua.
+Skill | Nombre | Objetivo
+Skill 1 | Arquitecto de producto handball club | Define módulos, prioridades, reglas, dependencias y alcance por fase.
+Skill 2 | Analista funcional de cobranzas deportivas | Modela cuenta corriente, mora, convenios, conceptos y cierres.
+Skill 3 | Experto UX/UI PWA mobile-first | Traduce flujos administrativos y de cancha en interfaces simples y veloces.
+Skill 4 | Especialista dominio handball | Valida categorías, posiciones, planillas, estadísticas, fixtures y restricciones del deporte.
+Skill 5 | Arquitecto de seguridad y auditoría | Diseña permisos, privacidad de menores, trazabilidad y controles críticos.
+Skill 6 | QA funcional y casos de prueba | Convierte reglas de negocio en escenarios verificables por fase.
+Skill 7 | Estratega de migración y arranque | Diseña importación de saldos iniciales, padrón histórico y saneamiento de datos.
+Elemento | Definición profesional
+Prompt de análisis funcional | Necesito que definas los requerimientos funcionales de la fase actual del sistema de club de handball. Separá: objetivos, actores, reglas de negocio, datos, validaciones, casos borde, riesgos y criterios de aceptación. No escribas código.
+Prompt de UX/PWA | Diseñá la experiencia mobile-first de esta funcionalidad para administrativos, profesores y tutores. Definí pantallas, componentes, navegación, estados vacíos, errores, accesibilidad, atajos y comportamiento PWA. Sin código.
+Prompt de dominio deportivo | Validá esta funcionalidad desde la lógica real del handball. Indicá si faltan datos de plantel, partido, ficha, habilitación, estadísticas o competencia. Proponé correcciones concretas y justificadas.
+Prompt de seguridad | Revisá esta propuesta y detectá riesgos de permisos, exposición de datos sensibles, fallas de auditoría, fraude de cobranzas, edición indebida o pérdida de trazabilidad. Sin código; solo observaciones y mitigaciones.
+Prompt de QA | Convertí esta funcionalidad en una matriz de pruebas con escenarios felices, alternativos, negativos, borde y de regresión. Indicá dato inicial, acción, resultado esperado y criticidad.
+Prompt de migración | Definí cómo importar padrón, saldos iniciales, responsables, documentación y planteles desde planillas previas, cuidando integridad, deduplicación y trazabilidad.
+Tipo | Horizonte | Contenido
+Memoria estable | Se conserva entre sesiones | Identidad del club, roles, criterios UX, arquitectura elegida, entidades base, reglas permanentes.
+Memoria de temporada | Puede cambiar anualmente | Importes, categorías activas, competencia vigente, políticas de mora, seguros y documentación.
+Memoria de sprint/fase | Corto plazo | Backlog actual, decisiones pendientes, hipótesis a validar, entregables inmediatos.
+Memoria contextual | Solo para la tarea en curso | Pantallas, casos de uso o documentos que se están refinando en el momento.

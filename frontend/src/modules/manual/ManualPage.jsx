@@ -24,7 +24,7 @@ const ManualPage = () => {
                 return (
                     <div className="space-y-6 animate-fade-in relative">
                         <div className="p-8 rounded-3xl bg-gradient-to-br from-blue-600 to-indigo-700 text-white shadow-2xl shadow-blue-500/20">
-                            <h1 className="text-3xl font-black uppercase mb-4 tracking-tighter">Handball SaaS</h1>
+                            <h1 className="text-3xl font-black uppercase mb-4 tracking-tighter">Handball</h1>
                             <p className="text-blue-100 font-medium leading-relaxed">
                                 Bienvenido a la plataforma definitiva para la gestión de clubes de handball. 
                                 Diseñada para ser 101% mobile-first, nuestra herramienta integra la administración 

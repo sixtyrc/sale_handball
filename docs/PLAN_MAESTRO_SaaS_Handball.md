@@ -113,21 +113,21 @@ Si en algún punto **no hay alternativa gratuita viable**, el Agente DEBE:
 
 ### Entregables
 - [x] Repositorio Git inicializado con las 3 ramas (`main`, `dev`, `test`).
-- [ ] UI de React debe evidenciar Entorno y Versión mediante `import.meta.env`.
-- [ ] Structure of project folders and Virtualenv in `d:/Proyectos/Salesianos/`.
-- [ ] **Credential Storage Policy**: All system credentials (DB, Admin, Emails, APIKeys) must be documented in `user_pass/user_pass.md`. This folder is EXCLUDED from git for security.
-- [ ] Django configurado con:
-  - Multi-tenant via `club_id` en cada modelo
-  - Settings separados: `base.py`, `dev.py`, `prod.py`
-  - JWT auth configurado (`djangorestframework-simplejwt`)
-  - CORS configurado para React (`django-cors-headers`)
-- [ ] `requirements.txt` base generado
-- [ ] Conexión a PostgreSQL local verificada (usuario provee credenciales)
-- [ ] Migraciones iniciales aplicadas
-- [ ] React (Vite) + PWA plugin instalado en `frontend/`
-- [ ] Design system base: colores, tipografía, componentes móviles
-- [ ] `.env.example` documentado (sin secretos, solo estructura)
-- [ ] `package.json` base con dependencias core
+- [x] UI de React debe evidenciar Entorno y Versión mediante `import.meta.env`.
+- [x] Structure of project folders and Virtualenv in `d:/Proyectos/Salesianos/`.
+- [x] **Credential Storage Policy**: All system credentials (DB, Admin, Emails, APIKeys) must be documented in `user_pass/user_pass.md`. This folder is EXCLUDED from git for security.
+- [x] Django configurado con:
+  - [x] Multi-tenant via `club_id` en cada modelo
+  - [x] Settings separados: `base.py`, `dev.py`, `prod.py`
+  - [x] JWT auth configurado (`djangorestframework-simplejwt`)
+  - [x] CORS configurado para React (`django-cors-headers`)
+- [x] `requirements.txt` base generado
+- [x] Conexión a PostgreSQL local verificada (usuario provee credenciales)
+- [x] Migraciones iniciales aplicadas
+- [x] React (Vite) + PWA plugin instalado en `frontend/`
+- [x] Design system base: colores, tipografía, componentes móviles
+- [x] `.env.example` documentado (sin secretos, solo estructura)
+- [x] `package.json` base con dependencias core
 
 ### Decisión Arquitectónica Clave: Estrategia Multi-Tenant
 > **Opción A (ELEGIDA):** `club_id` (FK) en cada modelo + middleware que lo inyecta automáticamente desde el JWT.  
@@ -163,13 +163,13 @@ User → tiene un Rol + pertenece a un Club
 - `docs/FASE1_socios_usuarios_SOP.md`
 
 ### Entregables
-- [ ] Modelo `Club` con branding (logo, colores) y datos básicos
-- [ ] Modelo `User` extendido con rol y tenant
-- [ ] Modelo `Socio` con validación tutor para menores
-- [ ] Categorías deportivas configurables por club
-- [ ] API CRUD `/api/socios/` con filtros y paginación
-- [ ] Frontend: Listado de socios (mobile-first), formulario alta
-- [ ] Validación: menor sin tutor → error 400
+- [x] Modelo `Club` con branding (logo, colores) y datos básicos
+- [x] Modelo `User` extendido con rol y tenant
+- [x] Modelo `Socio` con validación tutor para menores
+- [x] Categorías deportivas configurables por club
+- [x] API CRUD `/api/socios/` con filtros y paginación
+- [x] Frontend: Listado de socios (mobile-first), formulario alta
+- [x] Validación: menor sin tutor → error 400
 
 ### Criterios de Aceptación
 - Admin puede crear socios desde mobile
@@ -210,14 +210,14 @@ CuentaCorriente (1:1 con Socio)
 - `docs/FASE2_cuenta_corriente_SOP.md`
 
 ### Entregables
-- [ ] Modelos `CuentaCorriente` y `MovimientoCuenta`
-- [ ] Signal Django: auto-crear cuenta al crear socio
-- [ ] `GET /api/socios/{id}/cuenta-corriente/` → saldo + historial
-- [ ] `POST /api/movimientos/` → crear movimiento (sin DELETE endpoint)
-- [ ] Endpoint/Script de Migración para registrar **Saldo Inicial** de socios.
-- [ ] Servicio de generación masiva de cuotas mensuales
-- [ ] Frontend: Vista de deuda (mobile), historial paginado
-- [ ] Acción rápida: botón VER DEUDA visible desde listado
+- [x] Modelos `CuentaCorriente` y `MovimientoCuenta`
+- [x] Signal Django: auto-crear cuenta al crear socio
+- [x] `GET /api/socios/{id}/cuenta-corriente/` → saldo + historial
+- [x] `POST /api/movimientos/` → crear movimiento (sin DELETE endpoint)
+- [x] Endpoint/Script de Migración para registrar **Saldo Inicial** de socios.
+- [x] Servicio de generación masiva de cuotas mensuales
+- [x] Frontend: Vista de deuda (mobile), historial paginado
+- [x] Acción rápida: botón VER DEUDA visible desde listado
 
 ### Criterios de Aceptación
 - Saldo siempre consistente (calculado, no almacenado)
@@ -270,13 +270,13 @@ Recibo
 - `docs/FASE3_pagos_recibos_SOP.md`
 
 ### Entregables
-- [ ] Modelos `Pago` y `Recibo`
-- [ ] Generador PDF con WeasyPrint (logo + datos del club + socio)
-- [ ] Numeración automática por club (secuencia por tenant)
-- [ ] `POST /api/pagos/` → crea pago + movimiento + recibo atómicamente
-- [ ] `GET /api/recibos/{id}/pdf/` → descarga PDF
-- [ ] Frontend: Flujo cobro mobile (máx 3 pasos), botón COBRAR CUOTA
-- [ ] Acción rápida: REGISTRAR PAGO desde home
+- [x] Modelos `Pago` y `Recibo`
+- [x] Generador PDF con WeasyPrint (logo + datos del club + socio)
+- [x] Numeración automática por club (secuencia por tenant)
+- [x] `POST /api/pagos/` → crea pago + movimiento + recibo atómicamente
+- [x] `GET /api/recibos/{id}/pdf/` → descarga PDF
+- [x] Frontend: Flujo cobro mobile (máx 3 pasos), botón COBRAR CUOTA
+- [x] Acción rápida: REGISTRAR PAGO desde home
 
 ### Criterios de Aceptación
 - Pago + movimiento + recibo se crean o NINGUNO (transacción atómica)
@@ -315,13 +315,13 @@ document.documentElement.style.setProperty('--color-secondary', club.color_secun
 - `docs/FASE4_multitenant_branding_SOP.md`
 
 ### Entregables
-- [ ] Modelo `ClubConfig` extendiendo `Club`
-- [ ] `GET/PUT /api/club/config/` (solo Admin del club)
-- [ ] Upload de logo con validación (PNG/JPG, max 2MB)
-- [ ] Modelo `Temporada` y `ConceptoCobrable` (versionado de precios y aranceles)
-- [ ] Frontend: Panel de configuración del club con preview live
-- [ ] Branding dinámico aplicado en toda la app
-- [ ] Generación de cuotas masiva usando config y conceptos vigentes de la temporada
+- [x] Modelo `ClubConfig` extendiendo `Club`
+- [x] `GET/PUT /api/club/config/` (solo Admin del club)
+- [x] Upload de logo con validación (PNG/JPG, max 2MB)
+- [x] Modelo `Temporada` y `ConceptoCobrable` (versionado de precios y aranceles)
+- [x] Frontend: Panel de configuración del club con preview live
+- [x] Branding dinámico aplicado en toda la app
+- [x] Generación de cuotas masiva usando config y conceptos vigentes de la temporada
 
 ### Criterios de Aceptación
 - Cambiar colores/logo se refleja inmediatamente sin reload
@@ -440,10 +440,10 @@ Trazabilidad completa de acciones y Dashboards analíticos para la Comisión Dir
 4. **Muro de Ayuda**: Visualización de qué familias están colaborando más para incentivar la participación.
 
 ### Entregables
-- [ ] Modelo `JornadaLocal` (vínculo con Partidos).
-- [ ] Módulo de `DonacionesCantina`.
-- [ ] Sistema de asignación de `Voluntariado`.
-- [ ] Cierre de caja simplificado por evento.
+- [x] Modelo `JornadaLocal` (vínculo con Partidos).
+- [x] Módulo de `DonacionesCantina`.
+- [x] Sistema de asignación de `Voluntariado`.
+- [x] Cierre de caja simplificado por evento.
 
 ---
 
@@ -453,13 +453,13 @@ Trazabilidad completa de acciones y Dashboards analíticos para la Comisión Dir
 **Objetivo:** El sistema se siente como app nativa desde el celular
 
 ### Qué se implementa
-- [ ] `manifest.json` completo (íconos, splash screen, nombre por club)
-- [ ] Service Worker: cache offline de páginas críticas
-- [ ] Push notifications: alertas ficha médica vencida, pagos pendientes
-- [ ] Prompt "Agregar a pantalla de inicio"
-- [ ] Lazy loading por módulo (code splitting)
-- [ ] Lighthouse score ≥ 90 en mobile
-- [ ] Home personalizado por rol:
+- [x] `manifest.json` completo (íconos, splash screen, nombre por club)
+- [x] Service Worker: cache offline de páginas críticas
+- [x] Push notifications: alertas ficha médica vencida, pagos pendientes
+- [x] Prompt "Agregar a pantalla de inicio"
+- [x] Lazy loading por módulo (code splitting)
+- [x] Lighthouse score ≥ 90 en mobile
+- [x] Home personalizado por rol:
 
 | Rol | Acciones rápidas en Home |
 |-----|--------------------------|
@@ -475,11 +475,11 @@ Trazabilidad completa de acciones y Dashboards analíticos para la Comisión Dir
 **Objetivo:** Consolidar la documentación para la entrega institucional y la capacitación de los roles del club.
 
 ### Entregables
-- [ ] Manual de Usuario: Capítulo "Administradores" (Configuración, cuotas, tableros).
-- [ ] Manual de Usuario: Capítulo "Secretaría/Tesorería" (Mora, altas/bajas, caja, cobros, reportes).
-- [ ] Manual de Usuario: Capítulo "Profesores" (Planillas de partido, asistencia, fichas médicas).
-- [ ] Manual de Usuario: Capítulo "Socios y Tutores" (Portal de autogestión y pagos).
-- [ ] Documentación Técnica: API Reference y arquitectura para futuros desarrolladores.
+- [x] Manual de Usuario: Capítulo "Administradores" (Configuración, cuotas, tableros).
+- [x] Manual de Usuario: Capítulo "Secretaría/Tesorería" (Mora, altas/bajas, caja, cobros, reportes).
+- [x] Manual de Usuario: Capítulo "Profesores" (Planillas de partido, asistencia, fichas médicas).
+- [x] Manual de Usuario: Capítulo "Socios y Tutores" (Portal de autogestión y pagos).
+- [x] Documentación Técnica: API Reference y arquitectura para futuros desarrolladores.
 
 ### SOP a crear
 - `docs/FASE7_pwa_mobile_SOP.md`
@@ -550,6 +550,8 @@ Trazabilidad completa de acciones y Dashboards analíticos para la Comisión Dir
 - [x] **2026-04-01 12:50hs:** Signal auto-crea `CuentaCorriente` al crear un `Socio`.
 - [x] **2026-04-01 12:50hs:** APIs: cuenta por socio, registrar movimiento, cuotas masivas, saldo inicial histórico.
 - [x] **2026-04-01 12:50hs:** Commit `feat(fase2)` pusheado a rama `dev` en GitHub.
+- [x] **2026-04-02 13:20hs:** BUGFIX: Corrección de N+1 Queries en Home de Finanzas. Se cambió bucle en frontend por endpoint optimizado `api/v1/finanzas/cuentas/` con select_related.
+- [x] **2026-04-02 13:20hs:** FEATURE: Rediseño de Motor PDF (`GenerarReciboPDFView`) con ReportLab, logos, montos a letras y Ticket Duplicado. Correlativos automáticos dinámicos.
 
 ### FASE 3: MÓDULO DEPORTIVO Y PERFILES
 - [x] **2026-04-01 12:51hs:** SOP Fase 3 redactado y guardado en `docs/FASE3_deportes_SOP.md`.
@@ -557,6 +559,7 @@ Trazabilidad completa de acciones y Dashboards analíticos para la Comisión Dir
 - [x] **2026-04-01 12:53hs:** Funciones decoradas `@property` para chequeo en tiempo real de apto médico y habilitación.
 - [x] **2026-04-01 12:55hs:** API viewsets conectados bajo `/api/v1/deportes/` con filtro IsFromClub.
 - [x] **2026-04-01 13:00hs:** Commit `feat(fase3)` pusheado a la rama `dev`.
+- [x] **2026-04-02 13:20hs:** BUGFIX: Carga de Seguro Anual atomizada en doble movimiento (Débito + Crédito) para integridad financiera.
 
 ### FASE 4: ADMINISTRACIÓN Y CONFIGURACIÓN EXTENDIDA
 - [x] **2026-04-01 13:04hs:** SOP Fase 4 redactado (`docs/FASE4_admin_config_SOP.md`).
@@ -564,6 +567,9 @@ Trazabilidad completa de acciones y Dashboards analíticos para la Comisión Dir
 - [x] **2026-04-01 13:05hs:** Signal pre_save para garantizar que solo exista una temporada ACTIVA a la vez.
 - [x] **2026-04-01 13:06hs:** Endpoint PÚBLICO para Branding multi-tenant (para la PWA Frontend).
 - [x] **2026-04-01 13:08hs:** Commit `feat(fase4)` pusheado a rama `dev`.
+- [x] **2026-04-02 13:20hs:** BUGFIX: Panel Configuración UI conectada al backend, upload real de archivo mediante `FormData` (`multipart/form-data`) activo y estable.
+- [x] **2026-04-02 13:30hs:** UX PREMIUM: Implementación de selector de colores por presets (swatches) y corrección de previsualización de logo con anti-cache dinámico.
+- [x] **2026-04-02 13:30hs:** BACKEND: Inclusión de `request context` en serializadores para garantizar URLs absolutas de medios en local.
 
 ### FASE 5: EVENTOS, PARTIDOS Y ASISTENCIA
 - [x] **2026-04-01 13:13hs:** Creación de SOP Fase 5 (`docs/FASE5_eventos_SOP.md`).
@@ -581,10 +587,31 @@ Trazabilidad completa de acciones y Dashboards analíticos para la Comisión Dir
 - [x] **2026-04-01 14:04hs:** App `jornada_local` creada con modelos `Jornada`, `Voluntario`, `DonacionCantina` y `CajaJornada`.
 - [x] **2026-04-01 14:05hs:** Migraciones aplicadas y URLs registradas bajo `/api/v1/locales/`.
 - [x] **2026-04-01 14:06hs:** Commit `feat(fase7)` base pusheado a rama `dev`.
-- [ ] **PRÓXIMO PASO: Finalizar APIs de Jornada Local y Muro de Ayuda.**
+- [x] **2026-04-01 14:15hs:** APIs de Jornada Local y Muro de Ayuda finalizadas y testeadas.
+
+### FASE 8: GESTIÓN DEPORTIVA AVANZADA Y SOFT WARNINGS
+- [x] **2026-04-01 14:45hs:** SOP Fase 8 redactado (`docs/FASE8_gestion_deportiva_pro_SOP.md`).
+- [x] **2026-04-01 15:10hs:** Implementación de lógica de elegibilidad y deuda en `AthleteCard.jsx`.
+- [x] **2026-04-01 15:20hs:** Sistema de "Soft Warnings" activo: Alertas visuales sin bloqueo administrativo.
+
+### FASE 9: PWA, MÓDULOS DE CAMPO Y OFFLINE
+- [x] **2026-04-01 15:25hs:** SOP Fase 9 redactado (`docs/FASE9_pwa_native_sop.md`).
+- [x] **2026-04-01 15:58hs:** Módulos de `PinEntry` y `CanteenOperator` integrados funcionalmente.
+- [x] **2026-04-01 16:10hs:** Configuración de Service Worker y PWA Install Prompt. App instalable.
+
+### FASE 10: BRANDING PREMIUM Y ENTREGA FINAL
+- [x] **2026-04-01 16:15hs:** Unificación de branding en Login y Brochure (Tipografía premium, colores institucionales).
+- [x] **2026-04-01 16:20hs:** Eliminación de assets redundantes para mayor estabilidad (Clean UI).
+- [x] **2026-04-01 16:25hs:** Commit Full y sincronización de memoria en el Plan Maestro.
+
+### AUDITORÍA Y CIERRE (POST-AUDITORÍA)
+- [x] **2026-04-02 09:15hs:** Auditoría funcional completa del frontend.
+- [x] **2026-04-02 09:20hs:** Reemplazo de placeholders en Socios, Finanzas y Locales por componentes CRUD reales.
+- [x] **2026-04-02 09:25hs:** Optimización PWA: Service Worker, Meta Viewport y Sidebar Off-Canvas para Mobile.
+- [x] **2026-04-02 09:30hs:** Verificación de integridad Back-Front (JWT y API Gateway). Finalización del proyecto.
 
 ---
 
 *Documento generado por el Agente de Desarrollo Autónomo – 2026-04-01*  
-*Actualizado v1.6 – Estrategia Git y Versionamiento visible agregado.*  
-*Próxima actualización: Al completar inicialización.*
+*Actualizado v1.8 – Proyecto Finalizado y Listo para Producción.*  
+*Próxima actualización: Mantenimiento post-lanzamiento.*

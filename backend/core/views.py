@@ -13,7 +13,10 @@ class LoginView(APIView):
         password = request.data.get('password')
         
         try:
-            user = CustomUser.objects.get(username=username)
+            # Buscamos por username O por email para evitar confusiones
+            from django.db.models import Q
+            user = CustomUser.objects.get(Q(username=username) | Q(email=username))
+            
             if user.check_password(password):
                 refresh = RefreshToken.for_user(user)
                 return Response({
@@ -23,7 +26,7 @@ class LoginView(APIView):
                 })
             return Response({'error': 'Contraseña incorrecta'}, status=status.HTTP_401_UNAUTHORIZED)
         except CustomUser.DoesNotExist:
-            return Response({'error': 'Usuario no encontrado'}, status=status.HTTP_404_NOT_FOUND)
+            return Response({'error': 'Usuario no encontrado o no existe'}, status=status.HTTP_404_NOT_FOUND)
 
 class ClubViewSet(viewsets.ModelViewSet):
     queryset = Club.objects.all()
@@ -38,6 +41,25 @@ class SocioViewSet(viewsets.ModelViewSet):
         # Multi-tenant filter
         return Socio.objects.filter(club=self.request.user.club)
 
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        if not serializer.is_valid():
+            print("❌ ERROR DE VALIDACIÓN DRF:", serializer.errors)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
     def perform_create(self, serializer):
         # Auto-assign club from the admin creating it
-        serializer.save(club=self.request.user.club)
+        club = self.request.user.club
+        if not club:
+            # Fallback al club por defecto si el usuario no tiene uno asociado (safety check)
+            import uuid
+            from .models import Club
+            club, _ = Club.objects.get_or_create(
+                id=uuid.UUID('00000000-0000-0000-0000-000000000001'),
+                defaults={'nombre': 'Salesianos Handball (Ref.)'}
+            )
+        serializer.save(club=club)

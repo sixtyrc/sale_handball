@@ -11,9 +11,9 @@ def check_player_health(perfil_id):
     2. Seguro/Ficha (Pago en temporada activa)
     3. Médico (Apto médico vigente)
     """
-    perfil = PerfilDeportivo.objects.select_related('socio', 'categoria', 'club').get(id=perfil_id)
+    perfil = PerfilDeportivo.objects.select_related('socio', 'categoria_actual').get(id=perfil_id)
     socio = perfil.socio
-    club = perfil.club
+    club = socio.club
     
     warnings = []
     ahora = timezone.now().date()
@@ -48,13 +48,13 @@ def check_player_health(perfil_id):
             warnings.append({
                 'tipo': 'ADMINISTRATIVO',
                 'mensaje': 'Sin registro de pago de Seguro o Ficha Federativa 2026.',
-                'severidad': 'WARNING'
+                'severidad': 'CRITICAL'
             })
             
     # 3. Chequeo Médico (Apto Médico)
     apto = DocumentoDigital.objects.filter(
-        perfil=perfil, 
-        tipo='APTO_MEDICO'
+        socio=perfil.socio, 
+        tipo='APTO_FISICO'
     ).order_by('-fecha_vencimiento').first()
     
     if not apto:

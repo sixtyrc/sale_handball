@@ -5,6 +5,7 @@ from django.contrib.auth.models import AbstractUser
 class Club(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     nombre = models.CharField(max_length=255)
+    subdominio = models.CharField(max_length=50, unique=True, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -46,11 +47,22 @@ class Socio(models.Model):
     fecha_nacimiento = models.DateField()
     estado = models.CharField(max_length=20, choices=ESTADO_CHOICES, default='ACTIVO')
     
-    # Contactos
+    # Datos de Contacto y Emergencia
     telefono = models.CharField(max_length=50, blank=True, null=True)
     email_contacto = models.EmailField(blank=True, null=True)
     contacto_emergencia_nombre = models.CharField(max_length=150, blank=True, null=True)
     contacto_emergencia_telefono = models.CharField(max_length=50, blank=True, null=True)
+
+    # Perfil Deportivo (Base)
+    altura = models.DecimalField(max_digits=4, decimal_places=2, null=True, blank=True)
+    mano_habil = models.CharField(max_length=10, choices=(('DER', 'Diestro'), ('IZQ', 'Zurdo')), default='DER')
+    posicion_habitual = models.CharField(max_length=100, blank=True, null=True)
+    
+    # Datos del Tutor (Mandatorio para menores)
+    nombre_tutor = models.CharField(max_length=200, blank=True, null=True)
+    dni_tutor = models.CharField(max_length=20, blank=True, null=True)
+    tel_tutor = models.CharField(max_length=50, blank=True, null=True)
+    parentesco_tutor = models.CharField(max_length=100, blank=True, null=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

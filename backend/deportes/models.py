@@ -99,7 +99,7 @@ class DocumentoDigital(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     socio = models.ForeignKey(Socio, on_delete=models.CASCADE, related_name='documentos')
     tipo = models.CharField(max_length=50, choices=TIPO_DOC_CHOICES)
-    archivo = models.FileField(upload_to=documento_path)
+    archivo = models.FileField(upload_to=documento_path, null=True, blank=True)
     
     fecha_emision = models.DateField(blank=True, null=True)
     fecha_vencimiento = models.DateField(blank=True, null=True)

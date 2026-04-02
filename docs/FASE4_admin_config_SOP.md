@@ -28,6 +28,7 @@ Desarrollar la capa de configuración de cada club (Multi-tenant). Esto incluye 
 ## 4. RESTRICCIONES Y CASOS BORDE (MEMORIA DE APRENDIZAJE)
 - **Image Uploads**: Asegurar instalar `Pillow` en virtualenv para el campo `ImageField`.
 - El endpoint público de branding es CRÍTICO para PWA multi-tenant. Si el usuario entra a `handball.com/salesianos`, el Front lee el `club_id` y llama a esta API sin token.
+- **Formularios de Config y Multi-Tenant (CRÍTICO)**: NO asumir que todas las UI creadas en mockup mapean al modelo físico (Ej: `nombre` o `web` en un formulario vs modelo config que guarda `logo`). Si se envían datos espurios, o se utiliza un endpoint como `mi-club/` que no existe en el backend, la aplicación fallará. Para subir imágenes vía API desde React siempre usar `FormData` con headers de `multipart/form-data`, o no persistirá el logo.
 
 ---
 *Fin del documento SOP Fase 4.*

@@ -311,6 +311,28 @@ Para cada módulo:
 
 ---
 
+## 🚨 ERRORES COMETIDOS — NO REPETIR (MEMORIA VIVA)
+
+### ❌ ERROR #1 — SQLite en lugar de PostgreSQL (2026-04-02)
+
+**Qué pasó:** El `settings.py` fue generado (por Django o por IA) con fallback a SQLite:
+```
+'ENGINE': os.environ.get('DB_ENGINE', 'django.db.backends.sqlite3')
+'NAME': os.environ.get('DB_NAME', BASE_DIR / 'db.sqlite3')
+```
+
+**Por qué está mal:** Este proyecto usa **PostgreSQL desde el día 0**. El fallback silencioso a SQLite puede hacer que el sistema arranque "funcionando" pero apuntando a una base incorrecta, perdiendo datos o causando inconsistencias.
+
+**Corrección aplicada:**
+- `ENGINE` hardcodeado a `'django.db.backends.postgresql'` — sin `os.environ.get`.
+- `NAME`, `USER`, `PASSWORD` sin valor por defecto — si no están en `.env`, Django explota en arranque (comportamiento correcto e intencional).
+- `HOST` default: `127.0.0.1`, `PORT` default: `5432` (únicos defaults aceptables).
+
+**Regla permanente:**
+> ⛔ **NUNCA usar SQLite en este proyecto. Ni como fallback, ni para tests, ni como default. La base de datos es PostgreSQL. Siempre. Sin excepción.**
+
+---
+
 ## 🎯 OBJETIVO FINAL
 
 Sistema SaaS listo para vender a clubes deportivos, escalable, profesional y fácil de usar desde el celular.

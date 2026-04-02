@@ -28,5 +28,12 @@ Dejar el esqueleto inicial listo y funcional de ambos proyectos (backend y front
 - **Mailing Setup**: Si el user `resend` en SMTP da problemas, validar si hace falta configuración TLS en vez de SSL. El usuario especificó SSL=True, TLS=False. Lo implementamos tal cual.
 - **Psycopg2**: Si ocurre error instalando `psycopg2` en entorno local Windows, probar instalando el binario precompilado `psycopg2-binary`.
 
+### ⛔ CRÍTICO — BASE DE DATOS: POSTGRESQL ÚNICAMENTE (2026-04-02)
+- **NUNCA usar SQLite en este proyecto.** Ni como fallback, ni como default, ni para tests locales.
+- El `settings.py` tiene `ENGINE` hardcodeado a `django.db.backends.postgresql`. No hay valor por defecto de sqlite3.
+- Si las variables DB_NAME/DB_USER/DB_PASSWORD no están en `.env`, Django explota en el arranque — esto es **correcto e intencional** para evitar silencio en configuraciones rotas.
+- **Base de datos local**: `salesianosdb` en PostgreSQL `127.0.0.1:5432`, user: `postgres`.
+- **Error cometido**: El `settings.py` fue generado con `os.environ.get('DB_ENGINE', 'django.db.backends.sqlite3')` como fallback. Eso fue eliminado el 2026-04-02. No volver a ese patrón.
+
 ---
-*Fin del documento SOP Fase 0.*
+*Fin del documento SOP Fase 0. Última actualización: 2026-04-02*

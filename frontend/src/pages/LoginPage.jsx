@@ -1,22 +1,55 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
-import { LogIn, Info } from 'lucide-react';
+import { LogIn, Info, Loader2 } from 'lucide-react';
 import Footer from '../components/layout/Footer';
-import clubLogo from '../assets/logo_club.png';
+import clubLogoFallback from '../assets/logo_club.png';
+import axios from 'axios';
 
 const LoginPage = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [branding, setBranding] = useState(null);
   const { login, env, version } = useAuthStore();
   const [error, setError] = useState('');
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    // Fetch public club branding
+    const fetchBranding = async () => {
+      try {
+        const response = await axios.get('http://localhost:8000/api/v1/admin-club/branding/salesianos/');
+        setBranding(response.data);
+      } catch (err) {
+        console.error('Branding fetch failed:', err);
+      }
+    };
+    fetchBranding();
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const result = await login(username, password);
-    if (!result.success) {
-      setError(result.error);
+    setLoading(true);
+    setError('');
+    
+    try {
+      const result = await login(username, password);
+      if (result.success) {
+        navigate('/dashboard');
+      } else {
+        setError(result.error);
+      }
+    } catch (err) {
+      setError('Error de conexión con el servidor');
+    } finally {
+      setLoading(false);
     }
   };
+
+  const currentLogo = branding?.logo 
+    ? (branding.logo.startsWith('http') ? branding.logo : `http://localhost:8000${branding.logo}`) 
+    : clubLogoFallback;
 
   return (
     <div className="min-h-screen flex flex-col bg-zinc-950">
@@ -28,8 +61,21 @@ const LoginPage = () => {
 
           <div className="relative z-10">
             <div className="text-center mb-8">
-              <h2 className="text-4xl font-extrabold text-white tracking-tight mb-2">
-                Salesianos <span className="text-red-600">Handball</span>
+              <div className="flex justify-center mb-6">
+                <div className="relative group">
+                  <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
+                  <img 
+                    src={currentLogo} 
+                    alt={`Logo ${branding?.club_nombre || 'Club'}`} 
+                    className="relative w-28 h-28 object-contain drop-shadow-2xl brightness-110"
+                  />
+                </div>
+              </div>
+              <h2 className="text-4xl font-extrabold text-white tracking-tight mb-2 uppercase">
+                {branding?.club_nombre?.split(' ')[0] || 'Salesianos'}{' '}
+                <span className="text-red-600">
+                  {branding?.club_nombre?.split(' ').slice(1).join(' ') || 'Handball'}
+                </span>
               </h2>
               <p className="text-gray-400">Gestión Institucional de Alto Rendimiento</p>
             </div>
@@ -65,9 +111,20 @@ const LoginPage = () => {
 
               <button
                 type="submit"
-                className="w-full py-4 bg-gradient-to-r from-blue-600 to-indigo-500 hover:from-blue-500 hover:to-indigo-400 text-white font-semibold rounded-xl shadow-lg shadow-blue-600/20 transition-all transform hover:scale-[1.02] active:scale-[0.98]"
+                disabled={loading}
+                className="w-full py-4 bg-gradient-to-r from-blue-600 to-indigo-500 hover:from-blue-500 hover:to-indigo-400 text-white font-semibold rounded-xl shadow-lg shadow-blue-600/20 transition-all transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
-                Iniciar sesión
+                {loading ? (
+                  <>
+                    <Loader2 className="animate-spin" size={20} />
+                    Iniciando sesión...
+                  </>
+                ) : (
+                  <>
+                    <LogIn size={20} />
+                    Iniciar sesión
+                  </>
+                )}
               </button>
             </form>
 

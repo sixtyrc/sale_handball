@@ -26,6 +26,9 @@ Implementar el sistema financiero central: Cuenta Corriente inmutable por socio,
 - **Mora automática**: No se implementa en Fase 2. Se agrega en Fase 4 al tener `ClubConfig`.
 - **Psycopg2 Decimal**: Usar `Decimal` de Python para montos, nunca `float`. Evita errores de redondeo.
 - **Signal auto-create**: Si se crea un `Socio` sin triggear el signal (por ejemplo desde shell), la `CuentaCorriente` puede no existir. Validar con `get_or_create`.
+- **Lentitud y Caída por N+1 Queries (¡CRÍTICO!)**: NUNCA iterar en React haciendo `Promise.all` con llamadas a la API `/cuenta/` por cada socio para listar los saldos generales. Esto hace cientos de llamadas simultáneas que colapsan el backend ("se pone todo lento, se chinga y no trae datos"). En su lugar, usar o crear un endpoint optimizado como `GET /api/v1/finanzas/cuentas/` que devuelva todos los saldos calculados en una sola query optimizada con `select_related`.
+- **Cobros Especiales con Monto Variable (Ej: Seguro Deportivo)**: No registrar un pago de seguro como un único movimiento positivo aisaldo, porque esto genera un saldo a favor falso al socio. Se debe registrar en el MISMO momento el CARGO (débito negativo) y el PAGO (crédito positivo).
+- **Generación de Nro de Recibo PDF**: No añadir soporte base autoincremental rígido sin validarlo por Tenant. En su lugar, el número de recibo se autogenera de forma secuencial al volar en el endpoint PDF, contando con `count()` todos los pagos positivos históricos previos para el respectivo tenant (`cuenta__socio__club`).
 
 ---
 *Fin del documento SOP Fase 2.*

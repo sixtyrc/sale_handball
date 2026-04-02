@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Keypad, ArrowRight, ShieldCheck } from 'lucide-react';
+import { Grid as Keypad, ArrowRight, ShieldCheck } from 'lucide-react';
 import axios from 'axios';
 
 const PinEntry = () => {
