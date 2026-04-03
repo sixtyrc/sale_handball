@@ -62,8 +62,9 @@ class CuentaCorrienteListView(APIView):
                     'nombres': cuenta.socio.nombres,
                     'apellidos': cuenta.socio.apellidos,
                     'dni': cuenta.socio.dni,
+                    'nro_socio': cuenta.socio.nro_socio,
                 },
-                'saldo': cuenta.saldo, # Propiedad @property
+                'saldo': cuenta.saldo,
                 'created_at': cuenta.created_at
             })
             
@@ -98,7 +99,12 @@ class RegistrarMovimientoView(APIView):
 
 
 class GenerarCuotasMasivasView(APIView):
-    """POST /api/v1/finanzas/cuotas/generar/ → Genera cuotas para todos los socios ACTIVOS del club."""
+    """POST /api/v1/finanzas/cuotas/generar/ → Genera cuotas para todos los socios ACTIVOS del club.
+    
+    Protecciones:
+    - Anti-duplicado: si un socio ya tiene una CUOTA en el mismo mes/año, se omite.
+    - Descuento familiar: aplica bonificación extra si el socio pertenece a un GrupoFamiliar.
+    """
     permission_classes = [IsAdminRole]
 
     def post(self, request):
@@ -109,14 +115,32 @@ class GenerarCuotasMasivasView(APIView):
         monto = -abs(serializer.validated_data['monto'])  # Débito = negativo
         descripcion = serializer.validated_data['descripcion']
         fecha = serializer.validated_data['fecha']
+        mes = fecha.month
+        anio = fecha.year
 
-        socios_activos = Socio.objects.filter(club=request.user.club, estado='ACTIVO')
+        socios_activos = Socio.objects.filter(
+            club=request.user.club, estado='ACTIVO'
+        ).select_related('grupo_familiar__club__configuracion')
 
         movimientos_creados = 0
+        socios_saltados = []
+
         with transaction.atomic():
             for socio in socios_activos:
                 cuenta, _ = CuentaCorriente.objects.get_or_create(socio=socio)
-                
+
+                # ─── ANTI-DUPLICADO: ¿ya tiene CUOTA este mes/año? ───
+                ya_tiene_cuota = MovimientoFinanciero.objects.filter(
+                    cuenta=cuenta,
+                    tipo='CUOTA',
+                    fecha__year=anio,
+                    fecha__month=mes
+                ).exists()
+
+                if ya_tiene_cuota:
+                    socios_saltados.append(socio.nro_socio or socio.dni)
+                    continue
+
                 # 1. Registrar la Cuota Plena (Débito)
                 MovimientoFinanciero.objects.create(
                     cuenta=cuenta,
@@ -126,25 +150,45 @@ class GenerarCuotasMasivasView(APIView):
                     fecha=fecha,
                     creado_por=request.user
                 )
-                
-                # 2. Aplicar Bonificación por Beca si corresponde (Crédito)
-                if socio.porcentaje_beca > 0:
-                    bonificacion = abs(monto) * (Decimal(str(socio.porcentaje_beca)) / Decimal('100'))
+
+                # 2. Calcular el mayor descuento aplicable (beca individual vs familiar)
+                desc_beca = socio.porcentaje_beca or 0
+                desc_familiar = 0
+                if socio.grupo_familiar:
+                    desc_familiar = socio.grupo_familiar.descuento_porcentaje
+
+                # Tomamos el mayor (no se acumulan para evitar cuotas en negativo accidentalmente)
+                descuento_final = max(desc_beca, desc_familiar)
+
+                if descuento_final > 0:
+                    bonificacion = abs(monto) * (Decimal(str(descuento_final)) / Decimal('100'))
+                    
+                    if desc_familiar > desc_beca:
+                        n_miembros = socio.grupo_familiar.miembros_activos
+                        desc_descripcion = f'Desc. Familiar ({n_miembros} miembros) {desc_familiar}% – {descripcion}'
+                        tipo_mov = 'BECA'
+                    else:
+                        desc_descripcion = f'Bonificación Beca {desc_beca}% – {descripcion}'
+                        tipo_mov = 'BECA'
+
                     MovimientoFinanciero.objects.create(
                         cuenta=cuenta,
-                        tipo='BECA',
+                        tipo=tipo_mov,
                         monto=bonificacion,
-                        descripcion=f'Bonificación Beca {socio.porcentaje_beca}% - {descripcion}',
+                        descripcion=desc_descripcion,
                         fecha=fecha,
                         creado_por=request.user
                     )
-                
+
                 movimientos_creados += 1
 
         return Response({
-            'message': f'Cuotas generadas exitosamente para {movimientos_creados} socios activos.',
+            'message': f'Cuotas generadas para {movimientos_creados} socios. {len(socios_saltados)} ya tenían cuota para {mes:02d}/{anio}.',
             'socios_procesados': movimientos_creados,
+            'socios_saltados_count': len(socios_saltados),
+            'socios_saltados_detalle': socios_saltados,
             'monto': abs(monto),
+            'periodo': f'{mes:02d}/{anio}',
             'fecha': fecha
         }, status=status.HTTP_201_CREATED)
 

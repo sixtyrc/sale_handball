@@ -24,6 +24,23 @@ class ClubConfig(models.Model):
     telefono = models.CharField(max_length=50, blank=True, null=True)
     direccion = models.CharField(max_length=255, blank=True, null=True)
     
+    # Descuentos por Grupo Familiar (configurables por club)
+    descuento_2_hermanos = models.IntegerField(
+        default=15,
+        validators=[MinValueValidator(0), MaxValueValidator(100)],
+        help_text="% de descuento con 2 miembros activos del mismo grupo familiar."
+    )
+    descuento_3_hermanos = models.IntegerField(
+        default=25,
+        validators=[MinValueValidator(0), MaxValueValidator(100)],
+        help_text="% de descuento con 3 miembros activos del mismo grupo familiar."
+    )
+    descuento_4_mas_hermanos = models.IntegerField(
+        default=30,
+        validators=[MinValueValidator(0), MaxValueValidator(100)],
+        help_text="% de descuento con 4 o más miembros activos del mismo grupo familiar."
+    )
+
     dia_vencimiento_cuota = models.IntegerField(
         default=10, 
         validators=[MinValueValidator(1), MaxValueValidator(28)],

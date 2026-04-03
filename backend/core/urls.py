@@ -1,10 +1,11 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import LoginView, ClubViewSet, SocioViewSet, SocioPublicCheckView
+from .views import LoginView, ClubViewSet, SocioViewSet, SocioPublicCheckView, GrupoFamiliarViewSet
 
 router = DefaultRouter()
 router.register(r'clubs', ClubViewSet)
 router.register(r'socios', SocioViewSet, basename='socios')
+router.register(r'grupos-familiares', GrupoFamiliarViewSet, basename='grupos-familiares')
 
 urlpatterns = [
     path('login/', LoginView.as_view(), name='login'),

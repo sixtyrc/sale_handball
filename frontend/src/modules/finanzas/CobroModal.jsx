@@ -55,6 +55,13 @@ const CobroModal = ({ isOpen, onClose, onSuccess, socios, initialSocioId }) => {
                 descripcion: formData.descripcion,
                 fecha: fechaActual
             });
+
+            addToast({
+                type: 'success',
+                title: 'Cobro Registrado',
+                message: `Se acreditaron $${formData.monto} vía ${formData.metodo_pago} con éxito.`
+            });
+
             onSuccess();
             onClose();
             setFormData({ socio_id: '', monto: '', descripcion: 'Pago en efectivo de cuota social/deuda' });

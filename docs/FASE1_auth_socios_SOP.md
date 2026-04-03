@@ -1,40 +1,51 @@
 # FASE 1 - SOP: AUTENTICACIÓN, ROLES Y BASE SOCIETARIA
-**Fecha:** 2026-04-01
-**Estado:** En curso
+**Fecha:** 2026-04-03 (Actualizado 11:12)
+**Estado:** Actualizado / Estable
 
 ## 1. OBJETIVO / CONTEXTO
-Establecer el modelo base de usuarios, roles de acceso y el padrón de socios (multi-tenant) sobre el cual pivotará el resto del sistema. 
-El requerimiento crítico de negocio es que **TODAS** las entidades operativas (Crear Profesor, Crear Socio, etc.) deben ser autogestionables desde el frontend (React PWA) por los administradores de la plataforma, relegando el panel nativo de Django (`/admin/`) exclusivamente a mantenimiento duro de infraestructura y migraciones a nivel de base de datos.
+Establecer el modelo base de usuarios, roles de acceso y el padrón de socios (multi-tenant) sobre el cual pivotará el resto del sistema.
+El requerimiento crítico de negocio es que **TODAS** las entidades operativas deben ser autogestionables desde el frontend React PWA por los admins del club, relegando Django admin exclusivamente a mantenimiento de infraestructura.
 
-## 2. ENTRADAS (INPUTS)
-- Modelos a crear: `Club`, `CustomUser`, `Socio`.
-- Rol/Grupos de autenticación: `Admin`, `Profesor`, `Socio_Tutor`, `Directivo`.
-- Requisito Multi-tenant: Relacionar `CustomUser` y `Socio` con un `Club` (FK `club_id`).
+## 2. MODELOS BASE (App `core`)
+- **`Club`**: Entidad raíz multi-tenant.
+- **`CustomUser`**: AbstractUser + FK `club` + `role` (ADMIN, PROFESOR, SOCIO_TUTOR, DIRIGENTE).
+- **`GrupoFamiliar`** *(Nuevo ABR-2026)*: Agrupa socios de una misma familia para aplicar descuentos escalonados.
+- **`Socio`**: Persona física vinculada a un club. FK a `GrupoFamiliar` (opcional).
 
-## 3. PASOS / LÓGICA DE EJECUCIÓN
-1. **Configuración de la App Base:**
-   - Crear app `core` en el backend para alojar los modelos fundacionales.
-   - Registrar la app en `config/settings.py`.
-2. **Modelo `Club` y `CustomUser`:**
-   - Crear el modelo extendido de usuario en Django (`AbstractUser`) para soportar `club` (ForeignKey) y `role` (ChoiceField).
-   - Configurar `AUTH_USER_MODEL = 'core.CustomUser'` en settings (Crítico hacerlo antes de la primera migración).
-3. **Modelo `Socio`:**
-   - Crear el modelo que representa a la persona física vinculada a un club.
-   - Datos: `nro_socio`, `dni`, `fecha_nacimiento`, `estado` (ACTIVO, INACTIVO, SUSPENDIDO), `contacto_emergencia`.
-   - Vincular al `CustomUser` (1:1 - Un socio puede loguearse para autogestión).
-4. **API Rest y Permisos:**
-   - Exponer Endpoints (`/api/users/`, `/api/socios/`) con permisos que evalúen `request.user.role == 'Admin'` y `request.user.club == socio.club`.
-   - Implementar JWT Authentication (Login endpoint).
-5. **Frontend Setup Básico:**
-   - Crear Store (Zustand) para manejar la sesión del JWT.
-   - Crear rutas básicas protegidas.
+## 3. MODELO `GrupoFamiliar` — DISEÑO (ABR-2026)
+- **Propósito**: Agrupar hermanos, papá/mamá jugadores, bajo un mismo paraguas de descuento.
+- **Propiedad `miembros_activos`**: Cuenta socios en estado ACTIVO del grupo.
+- **Propiedad `descuento_porcentaje`**: Delega en `ClubConfig` para obtener el % según cantidad de miembros activos.
+  - 1 miembro → 0% (no hay descuento por solo 1)
+  - 2 miembros → `ClubConfig.descuento_2_hermanos` (default 15%)
+  - 3 miembros → `ClubConfig.descuento_3_hermanos` (default 25%)
+  - 4+ miembros → `ClubConfig.descuento_4_mas_hermanos` (default 30%)
+- **UNIQUE**: `('club', 'nombre')` — dos clubs pueden tener "Familia García" sin conflicto.
+- **Endpoint**: `GET/POST/PUT/DELETE /api/v1/grupos-familiares/` (DRF ViewSet multi-tenant).
 
-## 4. RESTRICCIONES Y CASOS BORDE (MEMORIA DE APRENDIZAJE)
-- **Multi-Tenant Fuerte:** Nunca usar un `ModelViewSet` sin sobreescribir `get_queryset()` para filtrar `club_id = request.user.club_id`.
-- **Custom User:** Obligatorio crear el CustomUser *antes* de correr `python manage.py migrate` por primera vez, si no Django se corrompe históricamente.
-- **Frontend Admin:** The API should include all methods (POST, PUT, DELETE logical, GET) so the React panel can manage users without touching Django admin.
-- **CREDENTIALS LOGGING**: Any manually created credentials (`admin`, `test_users`, etc.) must be stored in `user_pass/user_pass.md` (Ignored by Git).
-- **Error 500 al crear Socio (IntegrityError)**: Nota: no confiar solo en el Serializador de DRF para verificar los registros duplicados (`nro_socio`, `dni`). En caso de usar restricciones `unique_together` en BD, se debe catchear la excepción `django.db.IntegrityError` en el método `create()/perform_create()` en views y retornar un JSON de error 400 amistoso, ya que de lo contrario causa un error 500 interno rompiendo el flujo.
+## 4. CAMPO `nro_socio` — REGLA DE AUTOGENERACIÓN
+- No editable manualmente desde el frontend.
+- Lógica en `Socio.save()`: `[Primeros 2 dígitos DNI] + [Sufijo 3 dígitos autoincremental global del club]`.
+- Ejemplo: DNI 49xxxxxx → 49001, 49002... / DNI 52xxxxxx → 52001 (incremento global, no por prefijo).
+- Campo `read_only` en serializer y deshabilitado en modales de edición.
+
+## 5. GESTIÓN DE MENORES Y TUTORES
+- Si edad < 18 años: la ficha del socio muestra datos del tutor obligatoriamente.
+- Botón WhatsApp directo al tutor (número `tel_tutor`) con mensaje pre-cargado ("Estimado tutor de...").
+- La edad y la categoría (Mini / Infantiles / Menores / Cadetes / Juveniles / Mayores) se calculan dinámicamente en el frontend basadas en `fecha_nacimiento`. No persistir en BD.
+
+## 6. BADGES EN FICHA DE SOCIO (UI)
+- **Badge Grupo Familiar** (violeta): Muestra nombre del grupo + descuento activo (Ej: "Familia García -15%").
+- **Badge Beca** (esmeralda): Muestra porcentaje de beca individual (Ej: "Beca 50%").
+- Ambos badges se muestran solo si aplican (condicionales). Tamaño compacto para no alterar el layout de la card.
+
+## 7. RESTRICCIONES Y CASOS BORDE (MEMORIA DE APRENDIZAJE)
+- **Multi-Tenant Fuerte**: NUNCA usar ViewSet sin sobreescribir `get_queryset()` filtrando por `club = request.user.club`.
+- **Custom User Primero**: `AUTH_USER_MODEL` debe declararse ANTES de la primera migración. Si no, la BD se corrompe.
+- **IntegrityError en create Socio**: Catchear `django.db.IntegrityError` en `perform_create()` y retornar 400 amigable. No confiar solo en el serializer DRF.
+- **CREDENTIALS**: Credenciales nuevas siempre en `user_pass/user_pass.md` (gitignored).
+- **Categorías Dinámicas**: No guardar categoría en BD. Calcular en frontend con `fecha_nacimiento`. Esto evita desajustes al pasar cumpleaños sin actualizar.
+- **DNI como etiqueta en UI**: El campo "DNI" debe mostrarse siempre como "DNI" en la interfaz. No usar "ID" para evitar confusión con el UUID interno del sistema.
 
 ---
-*Fin del documento SOP Fase 1.*
+*Documento actualizado al 03/04/2026 11:12 - Sesión: GrupoFamiliar, badges descuento, categorías.*

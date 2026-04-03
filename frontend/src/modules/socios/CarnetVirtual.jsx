@@ -7,6 +7,28 @@ const CarnetVirtual = ({ socio, club }) => {
     // Usamos el ID del socio para que el scanner abra la ficha de validación pública
     const validationUrl = `${window.location.origin.replace('3051', '8000')}/api/v1/validar-carnet/${socio.id}/`;
 
+    const calculateAge = (birthDate) => {
+        if (!birthDate) return 0;
+        const today = new Date();
+        const birth = new Date(birthDate);
+        let age = today.getFullYear() - birth.getFullYear();
+        const m = today.getMonth() - birth.getMonth();
+        if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--;
+        return age;
+    };
+
+    const getCategory = (age) => {
+        if (age <= 10) return 'MINI';
+        if (age <= 12) return 'INFANTILES';
+        if (age <= 14) return 'MENORES';
+        if (age <= 16) return 'CADETES';
+        if (age <= 18) return 'JUVENILES';
+        return 'MAYORES';
+    };
+
+    const age = calculateAge(socio.fecha_nacimiento);
+    const categoryName = getCategory(age);
+
     const isVencido = socio.vencimiento_carnet.includes('VENCIDO') || socio.vencimiento_carnet.includes('RENOVAR');
     const isVitalicio = socio.vencimiento_carnet.includes('VITALICIO');
 
@@ -39,11 +61,19 @@ const CarnetVirtual = ({ socio, club }) => {
                         </div>
                     </div>
 
-                    <div className="mt-6 sm:mt-8 text-center">
-                        <p className="text-[8px] sm:text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-1 print:text-slate-400">Categoría</p>
-                        <p className="text-white font-bold text-[10px] sm:text-xs uppercase italic tracking-widest text-blue-400 print:text-slate-800">
-                            {isVitalicio ? 'Socio Vitalicio' : 'Socio Activo'}
-                        </p>
+                    <div className="mt-4 sm:mt-6 text-center space-y-2">
+                        <div>
+                            <p className="text-[7px] sm:text-[9px] font-black text-slate-600 uppercase tracking-[0.2em] mb-0.5 print:text-slate-400">Estado</p>
+                            <p className="text-white font-bold text-[9px] sm:text-[11px] uppercase italic tracking-widest print:text-slate-800">
+                                {isVitalicio ? 'Socio Vitalicio' : 'Socio Activo'}
+                            </p>
+                        </div>
+                        <div className="pt-2 border-t border-white/5 print:border-slate-200">
+                            <p className="text-[7px] sm:text-[9px] font-black text-slate-600 uppercase tracking-[0.2em] mb-0.5 print:text-slate-400">Categoría</p>
+                            <p className="text-blue-500 font-extrabold text-[10px] sm:text-xs uppercase tracking-tight print:text-blue-700">
+                                {categoryName}
+                            </p>
+                        </div>
                     </div>
                 </div>
 

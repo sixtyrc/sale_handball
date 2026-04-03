@@ -142,6 +142,12 @@ const SocioFormModal = ({ isOpen, onClose, onSuccess }) => {
                             <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest pl-1">DNI</label>
                             <input required name="dni" value={formData.dni} onChange={handleChange} className="w-full px-5 py-4 bg-slate-950 border border-slate-800 rounded-2xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all font-mono shadow-inner" />
                         </div>
+                        <div className="space-y-1.5 opacity-60">
+                            <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest pl-1">Nro de Socio</label>
+                            <div className="w-full px-5 py-4 bg-slate-900 border border-dashed border-slate-800 rounded-2xl text-slate-500 text-[10px] font-bold uppercase tracking-widest flex items-center justify-center">
+                                Autogenerado vía DNI
+                            </div>
+                        </div>
                         <div className="space-y-1.5">
                             <label className="text-[10px] font-black text-blue-500 uppercase tracking-widest pl-1">Fecha Nacimiento</label>
                             <input required type="date" name="fecha_nacimiento" value={formData.fecha_nacimiento} onChange={handleChange} className="w-full px-5 py-4 bg-slate-950 border border-slate-800 rounded-2xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-inner" />

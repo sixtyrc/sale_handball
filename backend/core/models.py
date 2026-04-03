@@ -35,6 +35,44 @@ class CustomUser(AbstractUser):
         return f"{self.email} - {self.role}"
 
 
+class GrupoFamiliar(models.Model):
+    """Agrupa socios de una misma familia para aplicar descuentos escalonados por cantidad de miembros activos."""
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    club = models.ForeignKey(Club, on_delete=models.CASCADE, related_name='grupos_familiares')
+    nombre = models.CharField(max_length=200, help_text="Ej: Familia García")
+    apellido_referencia = models.CharField(max_length=100, blank=True, null=True)
+    observaciones = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.nombre} ({self.club})"
+
+    @property
+    def miembros_activos(self):
+        return self.socios.filter(estado='ACTIVO').count()
+
+    @property
+    def descuento_porcentaje(self):
+        """Descuento escalonado según configuración del club."""
+        n = self.miembros_activos
+        try:
+            config = self.club.configuracion
+            if n >= 4:
+                return config.descuento_4_mas_hermanos
+            if n == 3:
+                return config.descuento_3_hermanos
+            if n == 2:
+                return config.descuento_2_hermanos
+        except Exception:
+            pass
+        return 0
+
+    class Meta:
+        verbose_name = "Grupo Familiar"
+        verbose_name_plural = "Grupos Familiares"
+        unique_together = ('club', 'nombre')
+
+
 class Socio(models.Model):
     ESTADO_CHOICES = (
         ('ACTIVO', 'Activo'),
@@ -101,6 +139,15 @@ class Socio(models.Model):
     # Nuevo: Dirección
     domicilio = models.CharField(max_length=255, blank=True, null=True)
 
+    # Grupo Familiar (para descuento por hermanos)
+    grupo_familiar = models.ForeignKey(
+        GrupoFamiliar,
+        on_delete=models.SET_NULL,
+        null=True, blank=True,
+        related_name='socios',
+        help_text="Grupo familiar al que pertenece. Permite calcular descuentos por hermanos."
+    )
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -111,6 +158,28 @@ class Socio(models.Model):
         return f"{self.apellidos}, {self.nombres} - [{self.nro_socio}]"
 
     def save(self, *args, **kwargs):
+        # Auto-generación de nro_socio si no existe
+        if not self.nro_socio:
+            prefix = self.dni[:2] if self.dni else "00"
+            
+            # Buscar el número más alto para el sufijo (últimos 3 dígitos)
+            # Obtenemos todos los nro_socio que tengan al menos 5 caracteres
+            query = Socio.objects.filter(club=self.club).exclude(nro_socio__isnull=True).exclude(nro_socio="")
+            
+            max_suffix = 0
+            for s in query:
+                try:
+                    # El sufijo son los últimos 3 dígitos del nro_socio
+                    suffix_str = s.nro_socio[-3:]
+                    suffix_val = int(suffix_str)
+                    if suffix_val > max_suffix:
+                        max_suffix = suffix_val
+                except (ValueError, IndexError):
+                    continue
+            
+            next_num = max_suffix + 1
+            self.nro_socio = f"{prefix}{str(next_num).zfill(3)}"
+
         # Optimización de imagen 4x4 y < 300KB
         if self.foto:
             try:
@@ -143,7 +212,8 @@ class Socio(models.Model):
                     img.save(output, format='JPEG', quality=quality)
                 
                 output.seek(0)
-                self.foto = ContentFile(output.read(), name=f"{self.nro_socio or self.dni}.jpg")
+                # Usar el nro_socio ya generado para el nombre del archivo
+                self.foto = ContentFile(output.read(), name=f"{self.nro_socio}.jpg")
             except Exception as e:
                 print(f"Error procesando imagen: {e}")
         

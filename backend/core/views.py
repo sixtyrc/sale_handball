@@ -2,8 +2,8 @@ from rest_framework import viewsets, permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
-from .models import Club, CustomUser, Socio
-from .serializers import ClubSerializer, CustomUserSerializer, SocioSerializer
+from .models import Club, CustomUser, Socio, GrupoFamiliar
+from .serializers import ClubSerializer, CustomUserSerializer, SocioSerializer, GrupoFamiliarSerializer
 
 class LoginView(APIView):
     permission_classes = [permissions.AllowAny]
@@ -131,3 +131,18 @@ class SocioPublicCheckView(APIView):
             })
         except Socio.DoesNotExist:
             return Response({'error': 'Socio no encontrado'}, status=status.HTTP_404_NOT_FOUND)
+
+
+class GrupoFamiliarViewSet(viewsets.ModelViewSet):
+    """
+    CRUD de Grupos Familiares del club.
+    Permite crear, editar, listar y asignar socios a grupos para calcular descuentos.
+    """
+    serializer_class = GrupoFamiliarSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        return GrupoFamiliar.objects.filter(club=self.request.user.club).prefetch_related('socios')
+
+    def perform_create(self, serializer):
+        serializer.save(club=self.request.user.club)

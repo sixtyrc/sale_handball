@@ -162,9 +162,9 @@ const SocioEditModal = ({ isOpen, onClose, onSuccess, socio }) => {
                             <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest pl-1">DNI</label>
                             <input required name="dni" value={formData.dni} onChange={handleChange} className="w-full px-5 py-4 bg-slate-950 border border-slate-800 rounded-2xl text-white focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all shadow-inner font-mono" />
                         </div>
-                        <div className="space-y-1.5">
-                            <label className="text-[10px] font-black text-amber-500 uppercase tracking-widest pl-1">Nro de Socio</label>
-                            <input name="nro_socio" value={formData.nro_socio} onChange={handleChange} className="w-full px-5 py-4 bg-slate-950 border border-amber-500/30 rounded-2xl text-white focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all font-mono shadow-inner shadow-amber-500/5" />
+                        <div className="space-y-1.5 opacity-60">
+                            <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest pl-1">Nro de Socio (Automático)</label>
+                            <input disabled name="nro_socio" value={formData.nro_socio} className="w-full px-5 py-4 bg-slate-900 border border-slate-800 rounded-2xl text-slate-400 font-mono cursor-not-allowed" />
                         </div>
 
                         {/* DOMICILIO: Full width on mobile and desktop */}
