@@ -15,11 +15,13 @@ import {
     Trash2
 } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
+import { useUIStore } from '../store/uiStore';
 import CategoriaFormModal from '../modules/deportes/CategoriaFormModal';
 import VincularSocioModal from '../modules/deportes/VincularSocioModal';
 
 const DeportesPage = () => {
     const { user } = useAuthStore();
+    const { addToast } = useUIStore();
     const [categorias, setCategorias] = useState([]);
     const [athletes, setAthletes] = useState([]);
     const [activeCategory, setActiveCategory] = useState(null);
@@ -42,21 +44,35 @@ const DeportesPage = () => {
             if (catRes.data.length > 0 && !activeCategory) setActiveCategory(catRes.data[0].id);
         } catch (error) {
             console.error('Error fetching sports data:', error);
+            addToast({
+                type: 'error',
+                title: 'Error de Red',
+                message: 'No se pudo sincronizar la información deportiva.'
+            });
         } finally {
             setLoading(false);
         }
     };
 
     const handleDeleteCategory = async (catId, e) => {
-        e.stopPropagation(); // Evitar que se seleccione la categoría al borrar
+        e.stopPropagation();
         if (!window.confirm('¿Realmente deseas eliminar esta categoría? Se desvincularán todos los jugadores.')) return;
         
         try {
             await api.delete(`deportes/categorias/${catId}/`);
             if (activeCategory === catId) setActiveCategory(null);
             fetchInitialData();
+            addToast({
+                type: 'success',
+                title: 'Categoría Eliminada',
+                message: 'La categoría y sus vínculos se han borrado correctamente.'
+            });
         } catch (error) {
-            alert('Error al eliminar la categoría. Asegúrate de tener permisos de Admin.');
+            addToast({
+                type: 'error',
+                title: 'Acceso Denegado',
+                message: 'Error al eliminar la categoría. Verifica tus permisos.'
+            });
         }
     };
 
@@ -73,7 +89,11 @@ const DeportesPage = () => {
                 
                 <div className="flex gap-3">
                     <button 
-                        onClick={() => alert('Estadísticas globales en construcción')}
+                        onClick={() => addToast({
+                            type: 'info',
+                            title: 'Módulo en Desarrollo',
+                            message: 'Las estadísticas globales estarán disponibles próximamente.'
+                        })}
                         className="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-white px-5 py-3 rounded-xl font-bold transition-all border border-slate-700"
                     >
                         <Activity size={18} />
@@ -124,7 +144,16 @@ const DeportesPage = () => {
                                         <div className={`w-2 h-2 rounded-full ${
                                             activeCategory === cat.id ? 'bg-white' : 'bg-slate-700 group-hover:bg-blue-400'
                                         }`} />
-                                        <span className="font-extrabold tracking-tight text-sm uppercase">{cat.nombre}</span>
+                                        <div className="flex items-center gap-2">
+                                            <span className="font-extrabold tracking-tight text-sm uppercase">{cat.nombre}</span>
+                                            <span className={`text-[9px] font-black px-1.5 py-0.5 rounded ${
+                                                cat.genero === 'MASCULINO' ? (activeCategory === cat.id ? 'bg-white/20 text-white' : 'bg-blue-500/20 text-blue-400') : 
+                                                cat.genero === 'FEMENINO' ? (activeCategory === cat.id ? 'bg-white/20 text-white' : 'bg-pink-500/20 text-pink-400') : 
+                                                'bg-slate-700 text-slate-400'
+                                            }`}>
+                                                {cat.genero === 'MASCULINO' ? 'M' : cat.genero === 'FEMENINO' ? 'F' : 'X'}
+                                            </span>
+                                        </div>
                                     </div>
                                     <ChevronRight size={16} className={`${activeCategory === cat.id ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'} transition-opacity`} />
                                 </button>
@@ -159,7 +188,13 @@ const DeportesPage = () => {
                                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
                                     <div>
                                         <div className="flex items-center gap-2 mb-2">
-                                            <span className="px-3 py-1 bg-blue-600/10 text-blue-500 text-[10px] font-black rounded-lg uppercase tracking-widest">Rama {currentCategory?.genero}</span>
+                                            <span className={`px-2 py-1 text-[9px] font-black rounded uppercase tracking-widest ${
+                                                currentCategory?.genero === 'MASCULINO' ? 'bg-blue-600/20 text-blue-500' :
+                                                currentCategory?.genero === 'FEMENINO' ? 'bg-pink-600/20 text-pink-500' :
+                                                'bg-slate-800 text-slate-500'
+                                            }`}>
+                                                Rama {currentCategory?.genero === 'MASCULINO' ? 'Masculina (M)' : currentCategory?.genero === 'FEMENINO' ? 'Femenina (F)' : 'Mixta (X)'}
+                                            </span>
                                         </div>
                                         <h3 className="text-3xl font-black text-white mb-2">{currentCategory?.nombre}</h3>
                                         <p className="text-slate-400 font-light text-sm italic">{currentCategory?.descripcion || 'Sin descripción para esta categoría'}</p>

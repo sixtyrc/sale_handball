@@ -9,7 +9,7 @@ class MovimientoFinancieroSerializer(serializers.ModelSerializer):
     class Meta:
         model = MovimientoFinanciero
         fields = [
-            'id', 'tipo', 'monto', 'descripcion', 'fecha',
+            'id', 'tipo', 'monto', 'descripcion', 'metodo_pago', 'fecha',
             'referencia_externa', 'creado_por', 'creado_por_nombre', 'created_at'
         ]
         read_only_fields = ['id', 'created_at', 'creado_por']

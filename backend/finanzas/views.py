@@ -116,6 +116,8 @@ class GenerarCuotasMasivasView(APIView):
         with transaction.atomic():
             for socio in socios_activos:
                 cuenta, _ = CuentaCorriente.objects.get_or_create(socio=socio)
+                
+                # 1. Registrar la Cuota Plena (Débito)
                 MovimientoFinanciero.objects.create(
                     cuenta=cuenta,
                     tipo='CUOTA',
@@ -124,6 +126,19 @@ class GenerarCuotasMasivasView(APIView):
                     fecha=fecha,
                     creado_por=request.user
                 )
+                
+                # 2. Aplicar Bonificación por Beca si corresponde (Crédito)
+                if socio.porcentaje_beca > 0:
+                    bonificacion = abs(monto) * (Decimal(str(socio.porcentaje_beca)) / Decimal('100'))
+                    MovimientoFinanciero.objects.create(
+                        cuenta=cuenta,
+                        tipo='BECA',
+                        monto=bonificacion,
+                        descripcion=f'Bonificación Beca {socio.porcentaje_beca}% - {descripcion}',
+                        fecha=fecha,
+                        creado_por=request.user
+                    )
+                
                 movimientos_creados += 1
 
         return Response({
@@ -197,9 +212,10 @@ class GenerarReciboPDFView(APIView):
             created_at__lte=movimiento.created_at
         ).count()
         numero_recibo = f"{count:06d}"
+        socio_slug = f"{movimiento.cuenta.socio.apellidos}_{movimiento.cuenta.socio.nombres}".replace(" ", "_").upper()
 
         response = HttpResponse(content_type='application/pdf')
-        response['Content-Disposition'] = f'attachment; filename="recibo_{numero_recibo}.pdf"'
+        response['Content-Disposition'] = f'attachment; filename="RECIBO_{socio_slug}_{numero_recibo}.pdf"'
 
         p = canvas.Canvas(response, pagesize=A4)
         width, height = A4

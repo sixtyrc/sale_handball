@@ -38,7 +38,8 @@ const MovimientosModal = ({ isOpen, onClose, cuenta }) => {
             const url = window.URL.createObjectURL(new Blob([response.data], { type: 'application/pdf' }));
             const link = document.createElement('a');
             link.href = url;
-            link.setAttribute('download', `Recibo_Pago.pdf`);
+            const socioName = `${socio.apellidos}_${socio.nombres}`.replace(/\s+/g, '_').toUpperCase();
+            link.setAttribute('download', `RECIBO_${socioName}_${movimientoId.substring(0, 8)}.pdf`);
             document.body.appendChild(link);
             link.click();
             link.parentNode.removeChild(link);

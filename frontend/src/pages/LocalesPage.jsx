@@ -18,9 +18,11 @@ import {
     Trophy
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useUIStore } from '../store/uiStore';
 import JornadaFormModal from '../modules/locales/JornadaFormModal';
 
 const LocalesPage = () => {
+    const { addToast } = useUIStore();
     const navigate = useNavigate();
     const [jornadas, setJornadas] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -136,7 +138,11 @@ const LocalesPage = () => {
                                     Abrir POS Cantina
                                 </Link>
                                 <button 
-                                    onClick={() => alert('Módulo de asignación de voluntarios en desarrollo')}
+                                    onClick={() => addToast({
+                                        type: 'info',
+                                        title: 'Módulo en Desarrollo',
+                                        message: 'La gestión de voluntarios estará disponible próximamente.'
+                                    })}
                                     className="flex items-center gap-3 bg-slate-800 text-white px-8 py-4 rounded-2xl font-black transition-all hover:bg-slate-700"
                                 >
                                     Ver Voluntarios
@@ -145,7 +151,14 @@ const LocalesPage = () => {
                                     <Lock size={16} className="text-amber-500" />
                                     <span className="text-sm font-mono text-slate-300">PIN: <span className="text-white font-black">{j.access_pin || '----'}</span></span>
                                     <button 
-                                        onClick={() => { navigator.clipboard.writeText(`https://salesianos.app/locales/${j.slug}/login`); alert('Link copiado'); }}
+                                        onClick={() => { 
+                                            navigator.clipboard.writeText(`https://salesianos.app/locales/${j.slug}/login`); 
+                                            addToast({
+                                                type: 'success',
+                                                title: 'Enlace Copiado',
+                                                message: 'El link de acceso se ha copiado al portapapeles.'
+                                            });
+                                        }}
                                         className="ml-2 hover:text-white transition-colors" 
                                         title="Copiar Link para Voluntarios"
                                     >
@@ -226,7 +239,11 @@ const LocalesPage = () => {
                     </p>
                 </div>
                 <button 
-                    onClick={() => alert('Ranking en construcción')}
+                    onClick={() => addToast({
+                        type: 'info',
+                        title: 'Módulo en Desarrollo',
+                        message: 'El ranking institucional está siendo procesado.'
+                    })}
                     className="px-8 py-4 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl font-black transition-all shadow-lg active:scale-95 whitespace-nowrap"
                 >
                     Ver Ranking Familias

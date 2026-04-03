@@ -44,7 +44,15 @@ class MovimientoFinanciero(models.Model):
         ('TERCER_TIEMPO', 'Tercer Tiempo'),
         ('SEGURO', 'Seguro Federativo'),
         ('AJUSTE', 'Ajuste / Corrección'),
+        ('BECA', 'Bonificación por Beca'),
         ('SALDO_INICIAL', 'Saldo Inicial / Deuda Histórica'),
+    )
+
+    METODO_PAGO_CHOICES = (
+        ('EFECTIVO', 'Efectivo'),
+        ('TRANSFERENCIA', 'Transferencia / Banco'),
+        ('MERCADOPAGO', 'Mercado Pago'),
+        ('OTRO', 'Otro / Ajuste'),
     )
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -52,6 +60,7 @@ class MovimientoFinanciero(models.Model):
     tipo = models.CharField(max_length=30, choices=TIPO_CHOICES)
     monto = models.DecimalField(max_digits=10, decimal_places=2)  # Negativo = débito, positivo = crédito
     descripcion = models.CharField(max_length=255)
+    metodo_pago = models.CharField(max_length=50, choices=METODO_PAGO_CHOICES, default='EFECTIVO', blank=True, null=True)
     fecha = models.DateField()
     referencia_externa = models.CharField(max_length=100, blank=True, null=True)  # Nro recibo, transacción MP
     creado_por = models.ForeignKey(

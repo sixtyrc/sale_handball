@@ -134,8 +134,9 @@ USE_I18N = True
 USE_TZ = True
 
 # CORS Config
-CORS_ALLOWED_ORIGINS = os.environ.get('CORS_ALLOWED_ORIGINS', 'http://localhost:5173').split(',')
+CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
+
 
 # REST Framework y Autenticación JWT
 REST_FRAMEWORK = {

@@ -14,12 +14,14 @@ class TemporadaSerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'club']
 
 class ClubConfigSerializer(serializers.ModelSerializer):
+    club_nombre = serializers.CharField(source='club.nombre', read_only=True)
     
     class Meta:
         model = ClubConfig
         fields = [
-            'id', 'club', 'logo', 'color_primario', 'color_secundario', 
-            'dia_vencimiento_cuota', 'dias_gracia', 'porcentaje_mora'
+            'id', 'club', 'club_nombre', 'logo', 'color_primario', 'color_secundario', 
+            'nombre_institucional', 'web', 'email_contacto', 'telefono', 'direccion',
+            'dia_vencimiento_cuota', 'dias_gracia', 'porcentaje_mora', 'inicio_ciclo_contable'
         ]
         read_only_fields = ['id', 'club']
 

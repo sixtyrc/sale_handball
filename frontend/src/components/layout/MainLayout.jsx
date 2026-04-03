@@ -2,13 +2,18 @@ import React, { useState } from 'react';
 import Sidebar from './Sidebar';
 import { useAuthStore } from '../../store/authStore';
 import { Menu, X } from 'lucide-react';
+import { APP_VERSION } from '../../version';
+
+import ToastContainer from '../common/ToastContainer';
 
 const MainLayout = ({ children }) => {
     const { user } = useAuthStore();
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
     return (
-        <div className="flex h-screen bg-slate-900 overflow-hidden">
+        <div className="flex h-screen bg-slate-900 overflow-hidden font-inter">
+            <ToastContainer />
+            
             {/* Mobile overlay */}
             {isSidebarOpen && (
                 <div 
@@ -51,6 +56,7 @@ const MainLayout = ({ children }) => {
                         >
                             CTSoft
                         </a>
+                        <span className="text-slate-800 ml-2">v{APP_VERSION}</span>
                     </p>
                 </footer>
             </main>

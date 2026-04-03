@@ -17,6 +17,13 @@ class ClubConfig(models.Model):
     color_primario = models.CharField(max_length=7, default='#2563eb', help_text="Formato Hex (#FFFFFF)")
     color_secundario = models.CharField(max_length=7, default='#1e40af', help_text="Formato Hex (#FFFFFF)")
     
+    # Datos Institucionales Nuevos
+    nombre_institucional = models.CharField(max_length=255, blank=True, null=True)
+    web = models.CharField(max_length=255, blank=True, null=True)
+    email_contacto = models.EmailField(blank=True, null=True)
+    telefono = models.CharField(max_length=50, blank=True, null=True)
+    direccion = models.CharField(max_length=255, blank=True, null=True)
+    
     dia_vencimiento_cuota = models.IntegerField(
         default=10, 
         validators=[MinValueValidator(1), MaxValueValidator(28)],
@@ -24,6 +31,12 @@ class ClubConfig(models.Model):
     )
     dias_gracia = models.IntegerField(default=5)
     porcentaje_mora = models.DecimalField(max_digits=5, decimal_places=2, default=10.00)
+    
+    # Inicio de Año Deportivo o Ciclo de Cobro (Corte de Deuda para Deportes)
+    inicio_ciclo_contable = models.DateField(
+        null=True, blank=True, 
+        help_text="Fecha desde la cual se empieza a contar la deuda para elegibilidad deportiva."
+    )
     
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

@@ -34,6 +34,7 @@ El requerimiento crítico de negocio es que **TODAS** las entidades operativas (
 - **Custom User:** Obligatorio crear el CustomUser *antes* de correr `python manage.py migrate` por primera vez, si no Django se corrompe históricamente.
 - **Frontend Admin:** The API should include all methods (POST, PUT, DELETE logical, GET) so the React panel can manage users without touching Django admin.
 - **CREDENTIALS LOGGING**: Any manually created credentials (`admin`, `test_users`, etc.) must be stored in `user_pass/user_pass.md` (Ignored by Git).
+- **Error 500 al crear Socio (IntegrityError)**: Nota: no confiar solo en el Serializador de DRF para verificar los registros duplicados (`nro_socio`, `dni`). En caso de usar restricciones `unique_together` en BD, se debe catchear la excepción `django.db.IntegrityError` en el método `create()/perform_create()` en views y retornar un JSON de error 400 amistoso, ya que de lo contrario causa un error 500 interno rompiendo el flujo.
 
 ---
 *Fin del documento SOP Fase 1.*

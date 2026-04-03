@@ -8,19 +8,19 @@ Definir los pasos para poner en marcha tanto el backend (Django) como el fronten
 ## 2. REQUISITOS PREVIOS
 - PostgreSQL local en ejecución con la base de datos `salesianosdb`.
 - Archivo `.env` configurado en la raíz del proyecto.
-- Entorno virtual `venv2` inicializado y con las dependencias instaladas.
+- Entorno virtual `venv` inicializado y con las dependencias instaladas.
 
 ## 3. PROCEDIMIENTO DE ARRANQUE
 
 ### Backend (Django API)
 1. Abrir una terminal en la raíz del proyecto (`d:\Proyectos\Salesianos`).
-2. Ejecutar: `powershell -Command "cd backend; ..\venv2\Scripts\python manage.py runserver 0.0.0.0:8000"`
+2. Ejecutar: `powershell -Command "cd backend; ..\venv\Scripts\python manage.py runserver 0.0.0.0:8000"`
 3. Verificar que responda en `http://localhost:8000/api/v1/`.
 
 ### Frontend (React + Vite)
 1. Abrir una terminal en la raíz del proyecto.
-2. Ejecutar: `powershell -Command "cd frontend; npm run dev -- --host --port 5173"`
-3. Verificar que responda en `http://localhost:5173/`.
+2. Ejecutar: `powershell -Command "cd frontend; npm run dev -- --host 127.0.0.1 --port 3051"`
+3. Verificar que responda en `http://127.0.0.1:3051/`.
 
 ## 4. CREDENCIALES DE ACCESO
 - **Admin**: `admin / Admin1234!` o `admin@salesianos.com.ar / admin1234`
@@ -28,6 +28,7 @@ Definir los pasos para poner en marcha tanto el backend (Django) como el fronten
 - **Cantina/Buffet**: `buffet@salesianos.com.ar / buffet1234`
 
 ## 5. APRENDIZAJES Y RESTRICCIONES
-- **Entorno Virtual**: Se detectó que el entorno virtual correcto es `venv2` (otros no poseen las librerías necesarias o poseen versiones incompatibles).
-- **Puertos**: El backend utiliza por defecto el puerto `8000` y el frontend el `5173` (alineado con `CORS_ALLOWED_ORIGINS`).
+- **Entorno Virtual**: Se detectó que el entorno virtual correcto es `venv` (o `.venv` dependiendo de la máquina, verificar siempre el .venv activo).
+- **Puertos**: El backend utiliza por defecto el puerto `8000`.
+- **RESTRICCIÓN DE PUERTO FRONTEND**: A partir de ahora, el frontend debe usar estrictamente el puerto **3051** en `127.0.0.1`. Esto se debe a errores de permisos (`EACCES: permission denied ::1`) con el puerto 5173 y con la resolución de host local en Windows.
 - **Comandos**: Para evitar problemas de rutas relativas en Windows, se recomienda hacer `cd` a la carpeta del componente antes de invocar el comando de arranque.

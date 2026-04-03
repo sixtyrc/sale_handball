@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import MainLayout from '../components/layout/MainLayout';
 import api from '../services/api';
+import { useUIStore } from '../store/uiStore';
 import { Calendar, MapPin, Clock, Users, Plus, Loader2, ChevronRight, Trophy } from 'lucide-react';
 
 const EventosPage = () => {
+    const { addToast } = useUIStore();
     const [eventos, setEventos] = useState([]);
     const [loading, setLoading] = useState(true);
 
@@ -31,7 +33,11 @@ const EventosPage = () => {
                     <p className="text-slate-400">Fixture, amistosos y convocatoria de jugadores</p>
                 </div>
                 <button 
-                    onClick={() => alert("Alta de evento en desarrollo")}
+                    onClick={() => addToast({
+                        type: 'info',
+                        title: 'Módulo en Desarrollo',
+                        message: 'La creación de eventos oficiales estará disponible en la próxima actualización.'
+                    })}
                     className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-6 py-3 rounded-xl font-bold transition-all shadow-lg shadow-blue-600/20 active:scale-95"
                 >
                     <Plus size={18} />
