@@ -39,7 +39,8 @@ const MovimientosModal = ({ isOpen, onClose, cuenta }) => {
             const link = document.createElement('a');
             link.href = url;
             const socioName = `${socio.apellidos}_${socio.nombres}`.replace(/\s+/g, '_').toUpperCase();
-            link.setAttribute('download', `RECIBO_${socioName}_${movimientoId.substring(0, 8)}.pdf`);
+            const dateStr = new Date().toISOString().split('T')[0];
+            link.setAttribute('download', `RECIBO_${socioName}_${dateStr}_${movimientoId.substring(0, 8)}.pdf`);
             document.body.appendChild(link);
             link.click();
             link.parentNode.removeChild(link);

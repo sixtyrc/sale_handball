@@ -7,13 +7,14 @@ import {
     Trophy, 
     Calendar, 
     ArrowRight,
-    TrendingUp,
     AlertTriangle,
     ShieldAlert,
     CheckCircle,
-    Loader2
+    Loader2,
+    CheckSquare
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useAuthStore } from '../store/authStore';
 
 const Dashboard = () => {
     const [stats, setStats] = useState({
@@ -53,7 +54,15 @@ const Dashboard = () => {
         }
     };
 
-    const fastActions = [
+    const { user } = useAuthStore();
+
+    const isProfesor = user?.rol === 'PROFESOR';
+
+    const fastActions = isProfesor ? [
+        { label: 'Ver Mis Jugadores', icon: Users, to: '/deportes', color: 'bg-emerald-600' },
+        { label: 'Planillas & Asistencia', icon: CheckSquare, to: '/eventos', color: 'bg-blue-600' },
+        { label: 'Cargar Stats', icon: Trophy, to: '/eventos', color: 'bg-amber-600' }
+    ] : [
         { label: 'Registrar Cobro', icon: CreditCard, to: '/finanzas', color: 'bg-emerald-600' },
         { label: 'Nuevo Socio', icon: Users, to: '/socios', color: 'bg-blue-600' },
         { label: 'Cargar Stats', icon: Trophy, to: '/deportes', color: 'bg-amber-600' },

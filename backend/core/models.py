@@ -128,7 +128,20 @@ class Socio(models.Model):
     # Perfil Deportivo (Base)
     altura = models.DecimalField(max_digits=4, decimal_places=2, null=True, blank=True)
     mano_habil = models.CharField(max_length=10, choices=(('DER', 'Diestro'), ('IZQ', 'Zurdo')), default='DER')
-    posicion_habitual = models.CharField(max_length=100, blank=True, null=True)
+    
+    POSICION_CHOICES = (
+        ('ARQUERO', 'Arquero'),
+        ('EXTREMO_IZQ', 'Extremo Izquierdo'),
+        ('EXTREMO_DER', 'Extremo Derecho'),
+        ('LATERAL_IZQ', 'Lateral Izquierdo'),
+        ('LATERAL_DER', 'Lateral Derecho'),
+        ('CENTRAL', 'Central'),
+        ('PIVOT', 'Pivot'),
+    )
+    posicion_habitual = models.CharField(max_length=100, choices=POSICION_CHOICES, blank=True, null=True)
+    
+    # Campo para aclaraciones extras
+    observaciones = models.TextField(blank=True, null=True)
     
     # Datos del Tutor (Mandatorio para menores)
     nombre_tutor = models.CharField(max_length=200, blank=True, null=True)
@@ -138,6 +151,7 @@ class Socio(models.Model):
 
     # Nuevo: Dirección
     domicilio = models.CharField(max_length=255, blank=True, null=True)
+    peso = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
 
     # Grupo Familiar (para descuento por hermanos)
     grupo_familiar = models.ForeignKey(
@@ -153,6 +167,28 @@ class Socio(models.Model):
 
     class Meta:
         unique_together = ('club', 'nro_socio')
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        
+        # Automatización de Categorización por Edad (Reglas CAH)
+        try:
+            from deportes.models import PerfilDeportivo, Categoria
+            perfil, _ = PerfilDeportivo.objects.get_or_create(socio=self)
+            
+            if self.fecha_nacimiento:
+                # Determinar categoría por año de nacimiento
+                # current_year - birth_year
+                categoria_auto = Categoria.get_category_by_age(
+                    birth_year=self.fecha_nacimiento.year,
+                    gender=self.sexo if self.sexo in ['MASCULINO', 'FEMENINO'] else 'MIXTO',
+                    club=self.club
+                )
+                if categoria_auto:
+                    perfil.categoria_actual = categoria_auto
+                    perfil.save()
+        except Exception as e:
+            print(f"Error en categorización automática: {e}")
 
     def __str__(self):
         return f"{self.apellidos}, {self.nombres} - [{self.nro_socio}]"

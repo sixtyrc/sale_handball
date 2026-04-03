@@ -59,7 +59,7 @@ class SocioSerializer(serializers.ModelSerializer):
             'fecha_nacimiento', 'sexo', 'grupo_sanguineo', 'estado', 'foto',
             'porcentaje_beca', 'telefono', 'email_contacto', 'domicilio',
             'contacto_emergencia_nombre', 'contacto_emergencia_telefono',
-            'altura', 'mano_habil', 'posicion_habitual', 'nombre_tutor',
+            'altura', 'peso', 'mano_habil', 'posicion_habitual', 'nombre_tutor',
             'dni_tutor', 'tel_tutor', 'parentesco_tutor', 'vencimiento_carnet',
             'grupo_familiar_id', 'grupo_familiar_nombre', 'descuento_familiar',
             'lesionado_activo', 'created_at', 'updated_at'

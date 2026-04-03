@@ -32,6 +32,7 @@ import {
 } from 'lucide-react';
 
 const SociosPage = () => {
+    const { addToast } = useUIStore();
     const [socios, setSocios] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
@@ -235,7 +236,14 @@ const SociosPage = () => {
                                                     onClick={async () => { 
                                                         setOpenMenuId(null);
                                                         const success = await generateSocioPDF(socio, clubConfig);
-                                                        if(!success) alert("Hubo un error al generar el PDF del socio.");
+                                                        if(!success) {
+                                                            addToast({
+                                                                type: 'error',
+                                                                title: 'Error de PDF',
+                                                                message: 'Hubo un error al generar la ficha del socio. Intentá nuevamente.',
+                                                                duration: 5000
+                                                            });
+                                                        }
                                                     }}
                                                     className="w-full flex items-center gap-3 px-4 py-4 text-xs font-bold text-white hover:bg-slate-800 transition-colors text-left border-t border-slate-800"
                                                 >

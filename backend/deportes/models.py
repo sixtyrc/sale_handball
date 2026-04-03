@@ -21,8 +21,56 @@ class Categoria(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    def save(self, *args, **kwargs):
+        is_new = self._state.adding
+        super().save(*args, **kwargs)
+        
+        # Automatización de Categoría (CAH Rules)
+        # Importamos aquí para evitar circular dependency
+        from deportes.models import PerfilDeportivo, Categoria
+        
+        perfil, created = PerfilDeportivo.objects.get_or_create(socio=self)
+        
+        # Si tiene fecha de nacimiento, determinamos su categoría automática
+        if self.fecha_nacimiento:
+            categoria_auto = Categoria.get_category_by_age(
+                birth_year=self.fecha_nacimiento.year,
+                gender=self.sexo if self.sexo in ['MASCULINO', 'FEMENINO'] else 'MIXTO',
+                club=self.club
+            )
+            if categoria_auto:
+                perfil.categoria_actual = categoria_auto
+                perfil.save()
+
     def __str__(self):
         return f"{self.nombre} ({self.genero})"
+
+    @classmethod
+    def get_category_by_age(cls, birth_year, gender, club):
+        """
+        Lógica de Categorización Automática (Confederación Argentina de Handball - CAH)
+        Basada en el año calendario actual.
+        """
+        current_year = date.today().year
+        age = current_year - birth_year
+        
+        # Mapeo de categorías estándar CAH
+        target_name = "Primera"
+        if age <= 8: target_name = "Mini" # Promocional
+        elif age <= 10: target_name = "Infantiles"
+        elif age <= 12: target_name = "Menores"
+        elif age <= 14: target_name = "Cadetes"
+        elif age <= 16: target_name = "Juveniles"
+        elif age <= 18: target_name = "Juniors"
+        else: target_name = "Mayores"
+
+        # Buscamos la categoría en el club que coincida con el nombre y género
+        # Nota: CAH separa por género, pero algunas categorías base pueden ser Mixto
+        return cls.objects.filter(
+            club=club, 
+            nombre__icontains=target_name,
+            genero__in=[gender, 'MIXTO']
+        ).first()
 
 class PerfilDeportivo(models.Model):
     POSICION_CHOICES = (

@@ -26,6 +26,7 @@ const SocioFormModal = ({ isOpen, onClose, onSuccess }) => {
         altura: '',
         mano_habil: 'DER',
         posicion_habitual: '',
+        observaciones: '',
         nombre_tutor: '',
         dni_tutor: '',
         tel_tutor: '',
@@ -79,7 +80,7 @@ const SocioFormModal = ({ isOpen, onClose, onSuccess }) => {
                 dni: '', nombres: '', apellidos: '', fecha_nacimiento: '',
                 email_contacto: '', telefono: '', domicilio: '', sexo: '', grupo_sanguineo: '',
                 porcentaje_beca: 0, foto: null, estado: 'ACTIVO', nro_socio: '',
-                altura: '', mano_habil: 'DER', posicion_habitual: '',
+                altura: '', mano_habil: 'DER', posicion_habitual: '', observaciones: '',
                 nombre_tutor: '', dni_tutor: '', tel_tutor: '', parentesco_tutor: ''
             });
             onClose();
@@ -209,8 +210,17 @@ const SocioFormModal = ({ isOpen, onClose, onSuccess }) => {
                 {activeTab === 'deportivo' && (
                     <div className="animate-in fade-in slide-in-from-right-8 duration-500 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-5">
                         <div className="space-y-1.5">
-                            <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest pl-1">Altura (Metros)</label>
-                            <input type="number" step="0.01" name="altura" value={formData.altura} onChange={handleChange} className="w-full px-5 py-4 bg-slate-950 border border-slate-800 rounded-2xl text-white focus:outline-none" placeholder="Ej: 1.85" />
+                            <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest pl-1">Posición Habitual</label>
+                            <select name="posicion_habitual" value={formData.posicion_habitual} onChange={handleChange} className="w-full px-5 py-4 bg-slate-950 border border-slate-800 rounded-2xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 appearance-none">
+                                <option value="">Seleccionar posición...</option>
+                                <option value="ARQUERO">Arquero</option>
+                                <option value="EXTREMO_IZQ">Extremo Izquierdo</option>
+                                <option value="EXTREMO_DER">Extremo Derecho</option>
+                                <option value="LATERAL_IZQ">Lateral Izquierdo</option>
+                                <option value="LATERAL_DER">Lateral Derecho</option>
+                                <option value="CENTRAL">Central</option>
+                                <option value="PIVOT">Pivot</option>
+                            </select>
                         </div>
                         <div className="space-y-1.5">
                             <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest pl-1">Mano Hábil</label>
@@ -218,6 +228,17 @@ const SocioFormModal = ({ isOpen, onClose, onSuccess }) => {
                                 <option value="DER">Diestro</option>
                                 <option value="IZQ">Zurdo</option>
                             </select>
+                        </div>
+                        <div className="space-y-1.5 sm:col-span-2">
+                            <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest pl-1">Observaciones / Notas Extras</label>
+                            <textarea 
+                                name="observaciones" 
+                                value={formData.observaciones} 
+                                onChange={handleChange} 
+                                rows="3"
+                                className="w-full px-5 py-4 bg-slate-950 border border-slate-800 rounded-2xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all font-medium text-sm"
+                                placeholder="Cualquier aclaración relevante sobre el jugador..."
+                            />
                         </div>
                     </div>
                 )}

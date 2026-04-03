@@ -29,7 +29,10 @@ const SocioEditModal = ({ isOpen, onClose, onSuccess, socio }) => {
         nombre_tutor: '',
         dni_tutor: '',
         tel_tutor: '',
-        parentesco_tutor: ''
+        parentesco_tutor: '',
+        contacto_emergencia_nombre: '',
+        contacto_emergencia_telefono: '',
+        peso: ''
     });
 
     useEffect(() => {
@@ -54,7 +57,10 @@ const SocioEditModal = ({ isOpen, onClose, onSuccess, socio }) => {
                 nombre_tutor: socio.nombre_tutor || '',
                 dni_tutor: socio.dni_tutor || '',
                 tel_tutor: socio.tel_tutor || '',
-                parentesco_tutor: socio.parentesco_tutor || ''
+                parentesco_tutor: socio.parentesco_tutor || '',
+                contacto_emergencia_nombre: socio.contacto_emergencia_nombre || '',
+                contacto_emergencia_telefono: socio.contacto_emergencia_telefono || '',
+                peso: socio.peso || ''
             });
         }
     }, [socio, isOpen]);
@@ -229,6 +235,16 @@ const SocioEditModal = ({ isOpen, onClose, onSuccess, socio }) => {
                                 <input name="telefono" value={formData.telefono} onChange={handleChange} className="w-full pl-20 pr-5 py-4 bg-slate-950 border border-slate-800 rounded-2xl text-white focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 font-mono" placeholder="3624617511" />
                             </div>
                         </div>
+
+                        {/* EMERGENCY CONTACT: Fills space on desktop */}
+                        <div className="space-y-1.5">
+                            <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest pl-1">Contacto Emergencia (Nombre)</label>
+                            <input name="contacto_emergencia_nombre" value={formData.contacto_emergencia_nombre} onChange={handleChange} className="w-full px-5 py-4 bg-slate-950 border border-slate-800 rounded-2xl text-white focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all shadow-inner" placeholder="P ej: Madre, Padre, Médico..." />
+                        </div>
+                        <div className="space-y-1.5">
+                            <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest pl-1">Teléfono Emergencia</label>
+                            <input name="contacto_emergencia_telefono" value={formData.contacto_emergencia_telefono} onChange={handleChange} className="w-full px-5 py-4 bg-slate-950 border border-slate-800 rounded-2xl text-white focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all shadow-inner font-mono" placeholder="Nro de contacto rápido..." />
+                        </div>
                     </div>
                 )}
 
@@ -236,9 +252,13 @@ const SocioEditModal = ({ isOpen, onClose, onSuccess, socio }) => {
                     <div className="animate-in fade-in slide-in-from-right-8 duration-500 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-5">
                         <div className="space-y-1.5">
                             <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest pl-1">Altura (Metros)</label>
-                            <input type="number" step="0.01" name="altura" value={formData.altura} onChange={handleChange} className="w-full px-5 py-4 bg-slate-950 border border-slate-800 rounded-2xl text-white focus:outline-none focus:border-amber-500" placeholder="Ej: 1.85" />
+                            <input type="number" step="0.01" name="altura" value={formData.altura} onChange={handleChange} className="w-full px-5 py-4 bg-slate-950 border border-slate-800 rounded-2xl text-white focus:outline-none focus:border-amber-500" placeholder="Ej: 1.72" />
                         </div>
                         <div className="space-y-1.5">
+                            <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest pl-1">Peso (Kg)</label>
+                            <input type="number" step="0.1" name="peso" value={formData.peso} onChange={handleChange} className="w-full px-5 py-4 bg-slate-950 border border-slate-800 rounded-2xl text-white focus:outline-none focus:border-amber-500" placeholder="Ej: 75.5" />
+                        </div>
+                        <div className="space-y-1.5 sm:col-span-2">
                             <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest pl-1">Mano Hábil</label>
                             <select name="mano_habil" value={formData.mano_habil} onChange={handleChange} className="w-full px-5 py-4 bg-slate-950 border border-slate-800 rounded-2xl text-white focus:outline-none focus:border-amber-500">
                                 <option value="DER">Diestro</option>

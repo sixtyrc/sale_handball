@@ -18,6 +18,7 @@ const PinEntry = lazy(() => import('./modules/locales/PinEntry'));
 const CanteenOperator = lazy(() => import('./modules/locales/CanteenOperator'));
 const ManualPage = lazy(() => import('./modules/manual/ManualPage'));
 const EventosPage = lazy(() => import('./pages/EventosPage'));
+const EventoDetailPage = lazy(() => import('./pages/EventoDetailPage'));
 
 const ProtectedRoute = ({ children }) => {
   const { isAuthenticated } = useAuthStore();
@@ -52,6 +53,7 @@ function App() {
           <Route path="/config" element={<ProtectedRoute><ConfigPage /></ProtectedRoute>} />
           <Route path="/ayuda" element={<ProtectedRoute><ManualPage /></ProtectedRoute>} />
           <Route path="/eventos" element={<ProtectedRoute><EventosPage /></ProtectedRoute>} />
+          <Route path="/eventos/:id" element={<ProtectedRoute><EventoDetailPage /></ProtectedRoute>} />
           
           <Route path="/" element={<Navigate to="/dashboard" />} />
           <Route path="*" element={<Navigate to="/login" />} />

@@ -64,6 +64,36 @@ class JornadaViewSet(viewsets.ModelViewSet):
         
         return response
 
+    @action(detail=False, methods=['get'], url_path='ranking')
+    def ranking_familias(self, request):
+        from django.db.models import Count, Sum, F, ExpressionWrapper, DecimalField
+        from django.db.models.functions import Coalesce
+        from core.models import Socio
+        
+        # Base points for showing up: 10 pts per voluntary shift, 1 pt per $1000 in donations/purchases
+        voluntarios_pts = Count('voluntariados') * 10
+        donaciones_pts = Coalesce(Sum('donaciones_cantina__valorizado_estimado'), DecimalField(0, max_digits=12, decimal_places=2)) / 1000
+        compras_pts = Coalesce(Sum('ventajornada__monto'), DecimalField(0, max_digits=12, decimal_places=2)) / 1000
+        
+        ranking = Socio.objects.filter(club=request.user.club).annotate(
+            pts_vol=voluntarios_pts,
+            pts_don=ExpressionWrapper(donaciones_pts, output_field=DecimalField(decimal_places=2)),
+            pts_com=ExpressionWrapper(compras_pts, output_field=DecimalField(decimal_places=2))
+        ).annotate(
+            puntos_totales=F('pts_vol') + F('pts_don') + F('pts_com')
+        ).filter(puntos_totales__gt=0).order_by('-puntos_totales')[:20]
+
+        data = []
+        for r in ranking:
+            data.append({
+                'id': r.id,
+                'nombre': f"{r.apellidos}, {r.nombres}",
+                'puntos': round(r.puntos_totales, 1),
+                'detalle': f"Voluntariados: {r.pts_vol} pts"
+            })
+            
+        return Response(data, status=status.HTTP_200_OK)
+
 class VoluntarioViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = VoluntarioSerializer

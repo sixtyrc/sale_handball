@@ -35,43 +35,48 @@ class EventoViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['get'], url_path='convocables')
     def get_convocables(self, request, pk=None):
         """
-        Retorna la lista de jugadores que pueden ser convocados para este evento.
-        Incluye jugadores de la categoría del evento + REFUERZOS (categoría inferior).
+        Retorna la lista de jugadores inteligentes para este evento.
+        - Pre-selecciona todos los de la categoría del evento.
+        - Permite buscar cualquier otro socio del club como refuerzo (barra de búsqueda).
+        - Si no hay categoría, devuelve todos los del club (perfiles).
         """
         evento = self.get_object()
-        if not evento.categoria:
-            return Response({'error': 'El evento debe tener una categoría asignada'}, status=400)
-            
-        cat_principal = evento.categoria
-        # Buscamos la categoría inmediata inferior (mismo género, orden superior)
-        # Asumiendo 0=Mayores, 1=Juniors... el refuerzo de Juniors (1) es Juveniles (2)
-        cat_refuerzo = Categoria.objects.filter(
-            club=evento.club,
-            genero=cat_principal.genero,
-            orden=cat_principal.orden + 1
-        ).first()
-        
-        categorias_ids = [cat_principal.id]
-        if cat_refuerzo:
-            categorias_ids.append(cat_refuerzo.id)
-            
-        perfiles = PerfilDeportivo.objects.filter(
-            club=evento.club,
-            categoria_actual_id__in=categorias_ids
+        search_query = request.query_params.get('search', '').strip()
+
+        # 1. Base Query: Solo socios con perfil deportivo en este club
+        perfiles_base = PerfilDeportivo.objects.filter(
+            socio__club=evento.club
         ).select_related('socio', 'categoria_actual')
-        
+
+        # 2. Filtrado Lógico
+        if search_query:
+            # Búsqueda explícita de refuerzo
+            perfiles = perfiles_base.filter(
+                models.Q(socio__nombres__icontains=search_query) |
+                models.Q(socio__apellidos__icontains=search_query)
+            )
+        elif evento.categoria:
+            # Caso Estándar: Traer categoría titular + pre-seleccionarlos
+            perfiles = perfiles_base.filter(
+                categoria_actual=evento.categoria
+            )
+        else:
+            # Caso Evento General
+            perfiles = perfiles_base
+
         data = []
         for p in perfiles:
             health = check_player_health(p.id)
             data.append({
-                'id': p.socio.id,
+                'id': str(p.socio.id),
                 'nombre_completo': f"{p.socio.apellidos}, {p.socio.nombres}",
-                'categoria': p.categoria_actual.nombre,
-                'es_refuerzo': p.categoria_actual_id != cat_principal.id,
+                'categoria': p.categoria_actual.nombre if p.categoria_actual else 'Sin categoría',
+                # Pre-seleccionar si es de la categoría titular del evento Y no estamos buscando refuerzos
+                'pre_seleccionado': (evento.categoria and p.categoria_actual == evento.categoria) if not search_query else False,
                 'habilitado_federacion': p.habilitado_federacion,
                 'eligibility': health
             })
-            
+
         return Response(data)
 
     @action(detail=True, methods=['post'], url_path='convocar')

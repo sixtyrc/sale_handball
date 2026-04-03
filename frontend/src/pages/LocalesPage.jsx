@@ -20,6 +20,7 @@ import {
 import { Link, useNavigate } from 'react-router-dom';
 import { useUIStore } from '../store/uiStore';
 import JornadaFormModal from '../modules/locales/JornadaFormModal';
+import RankingFamiliasModal from '../modules/locales/RankingFamiliasModal';
 
 const LocalesPage = () => {
     const { addToast } = useUIStore();
@@ -27,6 +28,7 @@ const LocalesPage = () => {
     const [jornadas, setJornadas] = useState([]);
     const [loading, setLoading] = useState(true);
     const [isJornadaModalOpen, setIsJornadaModalOpen] = useState(false);
+    const [isRankingModalOpen, setIsRankingModalOpen] = useState(false);
 
     useEffect(() => {
         fetchJornadas();
@@ -239,16 +241,17 @@ const LocalesPage = () => {
                     </p>
                 </div>
                 <button 
-                    onClick={() => addToast({
-                        type: 'info',
-                        title: 'Módulo en Desarrollo',
-                        message: 'El ranking institucional está siendo procesado.'
-                    })}
+                    onClick={() => setIsRankingModalOpen(true)}
                     className="px-8 py-4 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl font-black transition-all shadow-lg active:scale-95 whitespace-nowrap"
                 >
                     Ver Ranking Familias
                 </button>
             </div>
+
+            <RankingFamiliasModal 
+                isOpen={isRankingModalOpen} 
+                onClose={() => setIsRankingModalOpen(false)} 
+            />
         </MainLayout>
     );
 };

@@ -36,8 +36,10 @@ Sistematizar la gestión de los días en que el club es local. Reemplazar los Ex
 - **Acceso Público**: Link para que los padres vean las tareas pendientes y puedan "anotarse" como voluntarios desde la PWA.
 
 ## 4. RESTRICCIONES Y CASOS BORDE (MEMORIA APRENDIZAJE)
+- **Error Frontend vs Backend**: El componente `JornadaFormModal.jsx` enviaba el campo `descripcion`, pero el modelo `Jornada` en el backend usa el campo `observaciones`. Esto causaba un error 400 (Bad Request). **Solución**: Se homogeneizó usar `observaciones` en toda la app de Locales. Siempre verificar los nombres de los campos en el backend antes de armar los modales.
 - **Tercer Tiempo vs Cantina**: El 3T es para los jugadores (débito en Cta Cta), la Cantina es para el público (venta contado). No confundirlos.
 - **Cierre de Caja**: La `CajaJornada` es efímera. Debe morir con el evento y el saldo final inyectarse en la contabilidad general del club con el tipo `EVENTO_LOCAL`.
+- **Ranking Familias**: Agregado el endpoint `/locales/jornadas/ranking/` usando `aggregate` y `annotate` en Django para sumar puntos de Voluntariados (10pts) y Donaciones / Compras en cantina (1pti por $1000).
 
 ---
 *Fin del documento SOP Fase 7.*

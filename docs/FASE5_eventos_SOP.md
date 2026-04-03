@@ -32,10 +32,12 @@ Desarrollar el módulo interactivo principal para los `PROFESOR` y `ADMIN`. Perm
 - `POST /api/v1/eventos/{id}/cobrar-arbitraje/` -> Toma el monto fijo del árbitro y lo divide por cantidad de asistentes para generar débitos en Cta. Cta.
 - `POST /api/v1/eventos/{id}/cobrar-3t/` -> Crea movimientos financieros para los asistentes.
 
-## 4. RESTRICCIONES Y CASOS BORDE (MEMORIA APRENDIZAJE)
-- **Convocatoria Flexible (Refuerzos)**: El sistema permite convocar jugadores de cualquier categoría base a un evento para soportar el caso de refuerzos (Jose de menores juega en cadetes).
-- **Soft Warnings**: El endpoint de convocatoria intercepta y devuelve un listado de deudas o papeles faltantes, pero permite el guardado para no trabar la jornada deportiva.
-- **Arbitraje Dinámico**: Si el árbitro cobra $10.000 y asisten 10 jugadores, se les debita $1.000 a cada uno automáticamente.
+## 4. RESTRICCIONES Y UX (MOBILE FIRST) - MEMORIA CRÍTICA
+- **Categorización Automática (CAH)**: Obligatorio usar `Categoria.get_category_by_age` en el `save()` del `Socio`. Esto evita la carga manual y errores de federación. Basado en el año calendario del servidor.
+- **Citación "Zero Friction"**: En mobile, el usuario no debe "armar" la lista desde cero. El sistema debe pre-seleccionar a la categoría titular. Menos taps = Mejor UX.
+- **Entradas Numéricas**: Para montos (Arbitraje/3T), usar siempre `type="number"` o `inputMode="decimal"`. Esto dispara el teclado numérico en celulares.
+- **Campos Mandatorios**: La `fecha_nacimiento` es CRÍTICA. Sin ella, el socio no entra en ninguna categoría automática.
+- **Perfil Deportivo Premium**: Las posiciones deben ser `choices` predefinidos (Handball oficial) para evitar inconsistencias en reportes. Se debe proveer un campo `observaciones` (Text) para que el profe anote sutilezas tácticas o de conducta.
 
 ---
 *Fin del documento SOP Fase 5.*
