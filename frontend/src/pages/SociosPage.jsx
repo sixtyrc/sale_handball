@@ -7,6 +7,9 @@ import SocioEditModal from '../modules/socios/SocioEditModal';
 import CarnetVirtual from '../modules/socios/CarnetVirtual';
 import HistorialLesionesModal from '../modules/deportes/HistorialLesionesModal';
 import Modal from '../components/common/Modal'; // Asumiento que existe
+import { generateSocioPDF } from '../utils/pdfGenerator';
+import { useUIStore } from '../store/uiStore';
+
 import { 
     Search, 
     UserPlus, 
@@ -24,7 +27,8 @@ import {
     Contact,
     Users,
     Activity,
-    Stethoscope
+    Stethoscope,
+    Download
 } from 'lucide-react';
 
 const SociosPage = () => {
@@ -226,6 +230,16 @@ const SociosPage = () => {
                                                     className="w-full flex items-center gap-3 px-4 py-4 text-xs font-bold text-white hover:bg-slate-800 transition-colors text-left"
                                                 >
                                                     <Edit size={16} className="text-blue-400" /> Editar Datos
+                                                </button>
+                                                <button 
+                                                    onClick={async () => { 
+                                                        setOpenMenuId(null);
+                                                        const success = await generateSocioPDF(socio, clubConfig);
+                                                        if(!success) alert("Hubo un error al generar el PDF del socio.");
+                                                    }}
+                                                    className="w-full flex items-center gap-3 px-4 py-4 text-xs font-bold text-white hover:bg-slate-800 transition-colors text-left border-t border-slate-800"
+                                                >
+                                                    <Download size={16} className="text-violet-400" /> Descargar Ficha PDF
                                                 </button>
                                                 <button 
                                                     onClick={() => { setSelectedSocio(socio); setIsCarnetModalOpen(true); setOpenMenuId(null); }}
