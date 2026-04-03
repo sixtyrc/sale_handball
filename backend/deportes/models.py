@@ -74,6 +74,9 @@ class PerfilDeportivo(models.Model):
 
     @property
     def puede_jugar(self):
+        # Inhabilitar por lesión
+        if self.socio.lesiones.filter(estado='ACTIVA').exists():
+            return False
         return self.habilitado_federacion and self.apto_medico_vigente
 
 
@@ -143,3 +146,41 @@ class AsignacionProfe(models.Model):
 
     def __str__(self):
         return f"{self.usuario_profe.email} -> {self.categoria}"
+
+class Lesion(models.Model):
+    CONTEXTO_CHOICES = (
+        ('PARTIDO_OFICIAL', 'Partido Oficial'),
+        ('PARTIDO_AMISTOSO', 'Partido Amistoso'),
+        ('ENTRENAMIENTO', 'Entrenamiento'),
+        ('PARTICULAR', 'Particular / Fuera del club'),
+    )
+    ESTADO_CHOICES = (
+        ('ACTIVA', 'Activa'),
+        ('RECUPERADA', 'Recuperada'),
+    )
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    socio = models.ForeignKey('core.Socio', on_delete=models.CASCADE, related_name='lesiones')
+    
+    fecha_lesion = models.DateField()
+    fecha_probable_alta = models.DateField(blank=True, null=True)
+    fecha_alta_real = models.DateField(blank=True, null=True)
+    
+    contexto = models.CharField(max_length=50, choices=CONTEXTO_CHOICES)
+    diagnostico = models.TextField()
+    
+    uso_seguro = models.BooleanField(default=False)
+    observaciones_seguro = models.TextField(blank=True, null=True, help_text="Datos de la póliza, nro siniestro, etc.")
+    
+    estado = models.CharField(max_length=20, choices=ESTADO_CHOICES, default='ACTIVA')
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Lesión"
+        verbose_name_plural = "Lesiones"
+        ordering = ['-fecha_lesion']
+
+    def __str__(self):
+        return f"{self.socio} - {self.diagnostico[:30]} ({self.estado})"

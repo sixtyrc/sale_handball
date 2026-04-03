@@ -5,6 +5,7 @@ import api from '../services/api';
 import SocioFormModal from '../modules/socios/SocioFormModal';
 import SocioEditModal from '../modules/socios/SocioEditModal';
 import CarnetVirtual from '../modules/socios/CarnetVirtual';
+import HistorialLesionesModal from '../modules/deportes/HistorialLesionesModal';
 import Modal from '../components/common/Modal'; // Asumiento que existe
 import { 
     Search, 
@@ -21,7 +22,9 @@ import {
     Ban,
     MessageCircle,
     Contact,
-    Users
+    Users,
+    Activity,
+    Stethoscope
 } from 'lucide-react';
 
 const SociosPage = () => {
@@ -31,6 +34,7 @@ const SociosPage = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [isCarnetModalOpen, setIsCarnetModalOpen] = useState(false);
+    const [isLesionesModalOpen, setIsLesionesModalOpen] = useState(false);
     const [selectedSocio, setSelectedSocio] = useState(null);
     const [openMenuId, setOpenMenuId] = useState(null);
     const [clubConfig, setClubConfig] = useState(null);
@@ -101,7 +105,9 @@ const SociosPage = () => {
         if (age <= 14) return 'MENORES';
         if (age <= 16) return 'CADETES';
         if (age <= 18) return 'JUVENILES';
-        return 'MAYORES';
+        if (age <= 21) return 'JUNIORS';
+        if (age <= 30) return 'MAYORES';
+        return 'PAPIS_Y_MAMIS';
     };
 
     const formatWhatsAppNumber = (phone) => {
@@ -193,10 +199,15 @@ const SociosPage = () => {
                                                 <span className={`text-[9px] font-black px-2 py-0.5 rounded-full ${
                                                     socio.estado === 'ACTIVO' 
                                                     ? 'bg-emerald-500/10 text-emerald-500' 
-                                                    : 'bg-red-500/10 text-red-500 border border-red-500/10'
+                                                    : 'bg-slate-500/10 text-slate-500 border border-slate-500/10'
                                                 }`}>
                                                     {socio.estado}
                                                 </span>
+                                                {socio.lesionado_activo && (
+                                                    <span className="text-[9px] font-black px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-400 border border-rose-500/20 flex items-center gap-1">
+                                                        <Activity size={10} /> LESIONADO
+                                                    </span>
+                                                )}
                                             </div>
                                         </div>
                                     </div>
@@ -221,6 +232,12 @@ const SociosPage = () => {
                                                     className="w-full flex items-center gap-3 px-4 py-4 text-xs font-bold text-white hover:bg-slate-800 transition-colors text-left border-t border-slate-800"
                                                 >
                                                     <Contact size={16} className="text-emerald-400" /> Ver Carnet Virtual
+                                                </button>
+                                                <button 
+                                                    onClick={() => { setSelectedSocio(socio); setIsLesionesModalOpen(true); setOpenMenuId(null); }}
+                                                    className="w-full flex items-center gap-3 px-4 py-4 text-xs font-bold text-white hover:bg-slate-800 transition-colors text-left border-t border-slate-800"
+                                                >
+                                                    <Stethoscope size={16} className="text-rose-400" /> Historial Lesiones
                                                 </button>
                                                 <button 
                                                     onClick={() => handleToggleStatus(socio)}
@@ -361,6 +378,14 @@ const SociosPage = () => {
                     </div>
                 )}
             </Modal>
+
+            {isLesionesModalOpen && selectedSocio && (
+                <HistorialLesionesModal 
+                    isOpen={isLesionesModalOpen}
+                    onClose={() => { setIsLesionesModalOpen(false); setSelectedSocio(null); fetchSocios(); }}
+                    socio={selectedSocio}
+                />
+            )}
         </MainLayout>
     );
 };

@@ -13,9 +13,21 @@ import {
     X
 } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
+import logoFallback from '../../assets/logo_club.png';
+import { useEffect } from 'react';
 
 const Sidebar = ({ isOpen, setIsOpen }) => {
-    const { logout, user } = useAuthStore();
+    const { logout, user, branding, fetchBranding } = useAuthStore();
+
+    useEffect(() => {
+        if (!branding) {
+            fetchBranding(user?.club_slug || 'salesianos');
+        }
+    }, [branding, user]);
+
+    const currentLogo = branding?.logo 
+        ? (branding.logo.startsWith('http') ? branding.logo : `http://localhost:8000${branding.logo}`) 
+        : logoFallback;
 
     const allNavItems = [
         { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard', roles: ['ADMIN', 'PROFESOR', 'SOCIO_TUTOR', 'DIRIGENTE'] },
@@ -35,13 +47,21 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
 
     return (
         <aside className={`w-64 bg-slate-900 border-r border-slate-800 flex flex-col h-[100dvh] fixed left-0 top-0 z-50 transition-transform duration-300 lg:translate-x-0 ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}>
-            <div className="p-6 border-b border-slate-800 flex items-center justify-between">
-                <div>
-                    <h1 className="text-xl font-bold bg-gradient-to-r from-blue-400 to-indigo-500 bg-clip-text text-transparent">
-                        Handball
+            <div className="p-6 border-b border-slate-800 flex items-center gap-3">
+                <div className="relative">
+                    <div className="absolute -inset-1 bg-blue-500/20 rounded-full blur-sm"></div>
+                    <img 
+                        src={currentLogo} 
+                        alt="Logo" 
+                        className="relative w-10 h-10 object-contain rounded-lg"
+                    />
+                </div>
+                <div className="overflow-hidden">
+                    <h1 className="text-xl font-black bg-gradient-to-r from-blue-400 to-indigo-500 bg-clip-text text-transparent truncate tracking-tighter leading-none">
+                        {branding?.club_nombre?.split(' ')[1] || 'Handball'}
                     </h1>
-                    <p className="text-xs text-slate-500 mt-1 uppercase tracking-widest font-semibold">
-                        {user?.club_name || 'Salesianos'}
+                    <p className="text-[10px] text-slate-500 mt-0.5 uppercase tracking-widest font-bold truncate">
+                        {branding?.club_nombre?.split(' ')[0] || 'Salesianos'}
                     </p>
                 </div>
                 {/* Mobile close button */}

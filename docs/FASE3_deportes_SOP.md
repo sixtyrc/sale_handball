@@ -29,6 +29,7 @@ Construir el módulo deportivo del club: categorías de handball, perfil técnic
 ## 4. RESTRICCIONES Y CASOS BORDE (MEMORIA DE APRENDIZAJE)
 - **FileField en desarrollo local**: Configurar `MEDIA_ROOT` y `MEDIA_URL` en settings para que los archivos se guarden en `backend/media/`.
 - `DocumentoDigital` con tipo `APTO_FISICO` es el único que controla la habilitación para partidos.
+- **Stats Globales**: Se implementó `StatsGlobalesModal.jsx` para mostrar métricas agregadas del plantel (jugadores habilitados vs deuda/en riesgo, distribución M/F/X). Este módulo elimina al antiguo botón "en desarrollo" y consolida un vistazo íntegro de la salud deportiva e institucional.
 - **CREDENTIALS LOGGING**: Cualquier usuario de prueba creado debe estar en `user_pass/user_pass.md`.
 
 ---

@@ -11,6 +11,18 @@ export const useAuthStore = create((set) => ({
   isAuthenticated: !!localStorage.getItem('token'),
   env: import.meta.env.VITE_APP_ENV || 'dev',
   version: import.meta.env.VITE_APP_VERSION || 'v1.0.0',
+  branding: null,
+
+  fetchBranding: async (slug) => {
+    try {
+      const response = await api.get(`admin-club/branding/${slug || 'salesianos'}/`);
+      set({ branding: response.data });
+      return response.data;
+    } catch (error) {
+      console.error('Branding fetch failed:', error);
+      return null;
+    }
+  },
 
   login: async (username, password) => {
     try {

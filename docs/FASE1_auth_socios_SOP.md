@@ -46,6 +46,7 @@ El requerimiento crítico de negocio es que **TODAS** las entidades operativas d
 - **CREDENTIALS**: Credenciales nuevas siempre en `user_pass/user_pass.md` (gitignored).
 - **Categorías Dinámicas**: No guardar categoría en BD. Calcular en frontend con `fecha_nacimiento`. Esto evita desajustes al pasar cumpleaños sin actualizar.
 - **DNI como etiqueta en UI**: El campo "DNI" debe mostrarse siempre como "DNI" en la interfaz. No usar "ID" para evitar confusión con el UUID interno del sistema.
+- **Seguridad y JWT**: Se amplió `ACCESS_TOKEN_LIFETIME` a 24 hs para evitar la frustración ("embole") de deslogueos constantes. La seguridad se gestiona activando `ROTATE_REFRESH_TOKENS` y el módulo blacklist de SimpleJWT, lo que garantiza que, tras expirar, los tokens inactivos se descarten. El seguimiento estricto por cambio de dispositivo requeriría inyectar Claims con `User-Agent` que validen en cada *hit*, pero por ahora el balance UX vs Seguridad de 24hs es óptimo.
 
 ---
 *Documento actualizado al 03/04/2026 11:12 - Sesión: GrupoFamiliar, badges descuento, categorías.*

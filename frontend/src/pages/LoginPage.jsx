@@ -10,22 +10,14 @@ const LoginPage = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const [branding, setBranding] = useState(null);
-  const { login, env, version } = useAuthStore();
+  const { login, env, version, branding, fetchBranding } = useAuthStore();
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Fetch public club branding
-    const fetchBranding = async () => {
-      try {
-        const response = await axios.get('http://localhost:8000/api/v1/admin-club/branding/salesianos/');
-        setBranding(response.data);
-      } catch (err) {
-        console.error('Branding fetch failed:', err);
-      }
-    };
-    fetchBranding();
+    if (!branding) {
+      fetchBranding('salesianos');
+    }
   }, []);
 
   const handleSubmit = async (e) => {

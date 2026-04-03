@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Categoria, PerfilDeportivo, DocumentoDigital
+from .models import Categoria, PerfilDeportivo, DocumentoDigital, Lesion
 from core.serializers import SocioSerializer
 from .eligibility import check_player_health
 
@@ -36,3 +36,9 @@ class PerfilDeportivoSerializer(serializers.ModelSerializer):
     def validate(self, data):
         # Additional validation if necessary
         return data
+
+class LesionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Lesion
+        fields = '__all__'
+        read_only_fields = ['id', 'created_at', 'updated_at']

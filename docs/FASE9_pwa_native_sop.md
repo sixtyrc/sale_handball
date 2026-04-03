@@ -54,4 +54,19 @@ plugins: [
 
 ---
 
-*Fecha: 2026-04-01 – Documentado por Antigravity*
+---
+
+## 💡 Aprendizajes y Actualizaciones (2026-04-03)
+
+### 🔴 Problema Detectado: PWA no se activaba en desarrollo
+- **Causa**: Vite PWA tiene el Service Worker desactivado por defecto en modo `dev` para evitar colisiones de caché durante la programación.
+- **Solución**: Se añadió `devOptions: { enabled: true, type: 'module' }` en `vite.config.js`. Esto permite probar la instalación (A2HS) en localhost:127.0.0.1:3051.
+
+### 🖼️ Problema Detectado: Iconos genéricos en la instalación
+- **Causa**: El manifest usaba archivos estáticos `pwa-192x192.png` que no reflejaban el branding dinámico del club.
+- **Solución**: Para este ecosistema SaaS, se implementó un paso de sincronización donde el logo del club (ej. `logo_club.png`) se copia a `public/logo_pwa.png` y se vincula en el `manifest`.
+- **Nota**: El `short_name` del manifest debe ser conciso (ej. "Salesianos") para evitar que Android/iOS lo corten en el escritorio.
+
+---
+
+*Fecha última edición: 2026-04-03 11:55:00 – Documentado por Antigravity*

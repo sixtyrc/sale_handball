@@ -2,9 +2,9 @@ from rest_framework import viewsets, permissions, status
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from django.shortcuts import get_object_or_404
-from .models import Categoria, PerfilDeportivo, DocumentoDigital
+from .models import Categoria, PerfilDeportivo, DocumentoDigital, Lesion
 from core.models import Socio
-from .serializers import CategoriaSerializer, PerfilDeportivoSerializer, DocumentoDigitalSerializer
+from .serializers import CategoriaSerializer, PerfilDeportivoSerializer, DocumentoDigitalSerializer, LesionSerializer
 
 class IsFromClub(permissions.BasePermission):
     """Permiso para asegurar que el usuario accede a datos de su club."""
@@ -84,3 +84,20 @@ class DocumentoDigitalViewSet(viewsets.ModelViewSet):
         documento.save()
         
         return Response(DocumentoDigitalSerializer(documento).data)
+
+class LesionViewSet(viewsets.ModelViewSet):
+    serializer_class = LesionSerializer
+    permission_classes = [permissions.IsAuthenticated, IsFromClub]
+
+    def get_queryset(self):
+        user = self.request.user
+        qs = Lesion.objects.filter(socio__club=user.club)
+        socio_id = self.request.query_params.get('socio')
+        if socio_id:
+            qs = qs.filter(socio_id=socio_id)
+        return qs
+
+    def perform_create(self, serializer):
+        socio_id = self.request.data.get('socio')
+        socio = get_object_or_404(Socio, id=socio_id, club=self.request.user.club)
+        serializer.save(socio=socio)

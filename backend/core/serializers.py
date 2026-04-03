@@ -50,6 +50,7 @@ class SocioSerializer(serializers.ModelSerializer):
     )
     grupo_familiar_nombre = serializers.SerializerMethodField()
     descuento_familiar = serializers.SerializerMethodField()
+    lesionado_activo = serializers.SerializerMethodField()
 
     class Meta:
         model = Socio
@@ -61,7 +62,7 @@ class SocioSerializer(serializers.ModelSerializer):
             'altura', 'mano_habil', 'posicion_habitual', 'nombre_tutor',
             'dni_tutor', 'tel_tutor', 'parentesco_tutor', 'vencimiento_carnet',
             'grupo_familiar_id', 'grupo_familiar_nombre', 'descuento_familiar',
-            'created_at', 'updated_at'
+            'lesionado_activo', 'created_at', 'updated_at'
         ]
         read_only_fields = ['club', 'usuario', 'nro_socio']
 
@@ -72,3 +73,6 @@ class SocioSerializer(serializers.ModelSerializer):
         if obj.grupo_familiar:
             return obj.grupo_familiar.descuento_porcentaje
         return 0
+
+    def get_lesionado_activo(self, obj):
+        return getattr(obj, 'lesiones', None) and obj.lesiones.filter(estado='ACTIVA').exists()

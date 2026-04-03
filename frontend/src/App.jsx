@@ -2,6 +2,7 @@ import React, { Suspense, lazy } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuthStore } from './store/authStore';
 import { Loader2 } from 'lucide-react';
+import BrandingManager from './components/common/BrandingManager';
 
 // Eager load for Login to ensure it appears fast for non-auth users
 import LoginPage from './pages/LoginPage';
@@ -32,6 +33,7 @@ const LoadingScreen = () => (
 function App() {
   return (
     <Router>
+      <BrandingManager />
       <Suspense fallback={<LoadingScreen />}>
         <Routes>
           {/* Rutas Públicas de Locales (Acceso por PIN) */}

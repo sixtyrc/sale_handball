@@ -18,6 +18,7 @@ import { useAuthStore } from '../store/authStore';
 import { useUIStore } from '../store/uiStore';
 import CategoriaFormModal from '../modules/deportes/CategoriaFormModal';
 import VincularSocioModal from '../modules/deportes/VincularSocioModal';
+import StatsGlobalesModal from '../modules/deportes/StatsGlobalesModal';
 
 const DeportesPage = () => {
     const { user } = useAuthStore();
@@ -28,6 +29,7 @@ const DeportesPage = () => {
     const [loading, setLoading] = useState(true);
     const [isCatModalOpen, setIsCatModalOpen] = useState(false);
     const [isVincularModalOpen, setIsVincularModalOpen] = useState(false);
+    const [isStatsModalOpen, setIsStatsModalOpen] = useState(false);
 
     useEffect(() => {
         fetchInitialData();
@@ -89,12 +91,8 @@ const DeportesPage = () => {
                 
                 <div className="flex gap-3">
                     <button 
-                        onClick={() => addToast({
-                            type: 'info',
-                            title: 'Módulo en Desarrollo',
-                            message: 'Las estadísticas globales estarán disponibles próximamente.'
-                        })}
-                        className="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-white px-5 py-3 rounded-xl font-bold transition-all border border-slate-700"
+                        onClick={() => setIsStatsModalOpen(true)}
+                        className="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-white px-5 py-3 rounded-xl font-bold transition-all border border-slate-700 shadow-lg shadow-slate-900/50"
                     >
                         <Activity size={18} />
                         Stats Globales
@@ -246,6 +244,13 @@ const DeportesPage = () => {
                 onClose={() => setIsVincularModalOpen(false)} 
                 onSuccess={fetchInitialData}
                 categoriaId={activeCategory}
+            />
+
+            <StatsGlobalesModal 
+                isOpen={isStatsModalOpen}
+                onClose={() => setIsStatsModalOpen(false)}
+                categorias={categorias}
+                athletes={athletes}
             />
         </MainLayout>
     );
