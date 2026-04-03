@@ -26,6 +26,7 @@ const SocioEditModal = ({ isOpen, onClose, onSuccess, socio }) => {
         altura: '',
         mano_habil: 'DER',
         posicion_habitual: '',
+        observaciones: '',
         nombre_tutor: '',
         dni_tutor: '',
         tel_tutor: '',
@@ -54,6 +55,7 @@ const SocioEditModal = ({ isOpen, onClose, onSuccess, socio }) => {
                 altura: socio.altura || '',
                 mano_habil: socio.mano_habil || 'DER',
                 posicion_habitual: socio.posicion_habitual || '',
+                observaciones: socio.observaciones || '',
                 nombre_tutor: socio.nombre_tutor || '',
                 dni_tutor: socio.dni_tutor || '',
                 tel_tutor: socio.tel_tutor || '',
@@ -64,6 +66,16 @@ const SocioEditModal = ({ isOpen, onClose, onSuccess, socio }) => {
             });
         }
     }, [socio, isOpen]);
+
+    const calculateAge = (dob) => {
+        if (!dob) return null;
+        const birthDate = new Date(dob);
+        const today = new Date();
+        let age = today.getFullYear() - birthDate.getFullYear();
+        const m = today.getMonth() - birthDate.getMonth();
+        if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) age--;
+        return age;
+    };
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -168,8 +180,19 @@ const SocioEditModal = ({ isOpen, onClose, onSuccess, socio }) => {
                             <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest pl-1">DNI</label>
                             <input required name="dni" value={formData.dni} onChange={handleChange} className="w-full px-5 py-4 bg-slate-950 border border-slate-800 rounded-2xl text-white focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all shadow-inner font-mono" />
                         </div>
+                        <div className="space-y-1.5">
+                            <label className="text-[10px] font-black text-blue-500 uppercase tracking-widest pl-1">Fecha Nacimiento</label>
+                            <input required type="date" name="fecha_nacimiento" value={formData.fecha_nacimiento} onChange={handleChange} className="w-full px-5 py-4 bg-slate-950 border border-slate-800 rounded-2xl text-white focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all shadow-inner" />
+                        </div>
                         <div className="space-y-1.5 opacity-60">
-                            <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest pl-1">Nro de Socio (Automático)</label>
+                            <div className="flex justify-between items-center pl-1">
+                                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest leading-none">Nro de Socio (Automático)</label>
+                                {formData.fecha_nacimiento && (
+                                    <span className="text-[10px] font-black text-amber-500 uppercase tracking-widest leading-none bg-amber-500/10 px-2 py-1 rounded-lg border border-amber-500/20 shadow-lg">
+                                        Edad: {calculateAge(formData.fecha_nacimiento)} años
+                                    </span>
+                                )}
+                            </div>
                             <input disabled name="nro_socio" value={formData.nro_socio} className="w-full px-5 py-4 bg-slate-900 border border-slate-800 rounded-2xl text-slate-400 font-mono cursor-not-allowed" />
                         </div>
 
@@ -265,9 +288,29 @@ const SocioEditModal = ({ isOpen, onClose, onSuccess, socio }) => {
                                 <option value="IZQ">Zurdo</option>
                             </select>
                         </div>
-                        <div className="space-y-1.5 sm:col-span-2">
+                        <div className="space-y-1.5">
                             <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest pl-1">Posición Habitual</label>
-                            <input name="posicion_habitual" value={formData.posicion_habitual} onChange={handleChange} className="w-full px-5 py-4 bg-slate-950 border border-slate-800 rounded-2xl text-white focus:outline-none focus:border-amber-500" placeholder="Pivot, Extremo, etc." />
+                            <select name="posicion_habitual" value={formData.posicion_habitual} onChange={handleChange} className="w-full px-5 py-4 bg-slate-950 border border-slate-800 rounded-2xl text-white focus:outline-none focus:border-amber-500 appearance-none">
+                                <option value="">Seleccionar posición...</option>
+                                <option value="ARQUERO">Arquero</option>
+                                <option value="EXTREMO_IZQ">Extremo Izquierdo</option>
+                                <option value="EXTREMO_DER">Extremo Derecho</option>
+                                <option value="LATERAL_IZQ">Lateral Izquierdo</option>
+                                <option value="LATERAL_DER">Lateral Derecho</option>
+                                <option value="CENTRAL">Central</option>
+                                <option value="PIVOT">Pivot</option>
+                            </select>
+                        </div>
+                        <div className="space-y-1.5 sm:col-span-2">
+                            <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest pl-1">Observaciones / Notas Extras</label>
+                            <textarea 
+                                name="observaciones" 
+                                value={formData.observaciones} 
+                                onChange={handleChange} 
+                                rows="3"
+                                className="w-full px-5 py-4 bg-slate-950 border border-slate-800 rounded-2xl text-white focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all font-medium text-sm"
+                                placeholder="Cualquier aclaración relevante sobre el jugador..."
+                            />
                         </div>
                     </div>
                 )}

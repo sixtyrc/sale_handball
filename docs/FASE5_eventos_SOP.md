@@ -36,8 +36,10 @@ Desarrollar el módulo interactivo principal para los `PROFESOR` y `ADMIN`. Perm
 - **Categorización Automática (CAH)**: Obligatorio usar `Categoria.get_category_by_age` en el `save()` del `Socio`. Esto evita la carga manual y errores de federación. Basado en el año calendario del servidor.
 - **Citación "Zero Friction"**: En mobile, el usuario no debe "armar" la lista desde cero. El sistema debe pre-seleccionar a la categoría titular. Menos taps = Mejor UX.
 - **Entradas Numéricas**: Para montos (Arbitraje/3T), usar siempre `type="number"` o `inputMode="decimal"`. Esto dispara el teclado numérico en celulares.
-- **Campos Mandatorios**: La `fecha_nacimiento` es CRÍTICA. Sin ella, el socio no entra en ninguna categoría automática.
-- **Perfil Deportivo Premium**: Las posiciones deben ser `choices` predefinidos (Handball oficial) para evitar inconsistencias en reportes. Se debe proveer un campo `observaciones` (Text) para que el profe anote sutilezas tácticas o de conducta.
+- **Sincronización Alta vs Edición**: El error detectado (modificar un modal y no el otro) se anota como restricción. Toda mejora en la ficha del Socio debe aplicarse a `SocioFormModal` y `SocioEditModal` simultáneamente.
+- **Refuerzos On-Demand**: La citación debe incluir un buscador dinámico que permita "traer" jugadores de cualquier otra categoría.
+
+**Última Actualización:** 2026-04-03 - Sincronización Completa de Fichas.
 
 ---
 *Fin del documento SOP Fase 5.*
