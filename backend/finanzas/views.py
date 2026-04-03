@@ -6,10 +6,10 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from core.models import Socio
-from .models import CuentaCorriente, MovimientoFinanciero
+from .models import CuentaCorriente, MovimientoFinanciero, AvisoPago
 from .serializers import (
     CuentaCorrienteSerializer, MovimientoFinancieroSerializer,
-    GenerarCuotasSerializer, SaldoInicialSerializer
+    GenerarCuotasSerializer, SaldoInicialSerializer, AvisoPagoSerializer
 )
 
 
@@ -409,3 +409,130 @@ class GenerarReciboPDFView(APIView):
         p.showPage()
         p.save()
         return response
+
+
+# ══════════════════════════════════════════════════════
+#  SISTEMA DE AVISOS DE PAGO (Socio → Admin → Recibo)
+# ══════════════════════════════════════════════════════
+
+class AvisoPagoSocioView(APIView):
+    """
+    GET  /api/v1/finanzas/mis-avisos/   → Socio ve sus propios avisos.
+    POST /api/v1/finanzas/mis-avisos/   → Socio crea un nuevo aviso de pago.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        # El socio solo ve sus propios avisos
+        try:
+            socio = request.user.perfil_socio
+        except Exception:
+            return Response({'error': 'No tenés un perfil de socio vinculado.'}, status=status.HTTP_403_FORBIDDEN)
+
+        avisos = AvisoPago.objects.filter(socio=socio)
+        serializer = AvisoPagoSerializer(avisos, many=True)
+        return Response(serializer.data)
+
+    def post(self, request):
+        try:
+            socio = request.user.perfil_socio
+        except Exception:
+            return Response({'error': 'No tenés un perfil de socio vinculado.'}, status=status.HTTP_403_FORBIDDEN)
+
+        data = request.data.copy()
+        data['socio'] = socio.id
+
+        serializer = AvisoPagoSerializer(data=data)
+        if serializer.is_valid():
+            serializer.save(socio=socio, estado='PENDIENTE')
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class AvisoPagoAdminView(APIView):
+    """
+    GET /api/v1/finanzas/avisos/   → Admin lista todos los avisos del club.
+    Filtros: ?estado=PENDIENTE | VALIDADO | RECHAZADO
+    """
+    permission_classes = [IsAdminOrProfesorRole]
+
+    def get(self, request):
+        estado = request.query_params.get('estado', None)
+        qs = AvisoPago.objects.filter(socio__club=request.user.club).select_related('socio', 'validado_por')
+        if estado:
+            qs = qs.filter(estado=estado)
+        serializer = AvisoPagoSerializer(qs, many=True)
+        return Response(serializer.data)
+
+
+class ValidarAvisoView(APIView):
+    """
+    POST /api/v1/finanzas/avisos/{id}/validar/
+    El admin confirma el pago → se genera el MovimientoFinanciero real y el recibo queda disponible.
+    Body: { "monto_real": 5000, "descripcion": "Cuota Abril 2026", "metodo_pago": "TRANSFERENCIA" }
+    """
+    permission_classes = [IsAdminOrProfesorRole]
+
+    def post(self, request, pk):
+        try:
+            aviso = AvisoPago.objects.get(id=pk, socio__club=request.user.club)
+        except AvisoPago.DoesNotExist:
+            return Response({'error': 'Aviso no encontrado.'}, status=status.HTTP_404_NOT_FOUND)
+
+        if aviso.estado != 'PENDIENTE':
+            return Response({'error': f'El aviso ya fue {aviso.get_estado_display()}. No se puede volver a procesar.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        monto_real = request.data.get('monto_real', aviso.monto_declarado)
+        descripcion = request.data.get('descripcion', aviso.descripcion)
+        metodo_pago = request.data.get('metodo_pago', 'TRANSFERENCIA')
+
+        with transaction.atomic():
+            cuenta, _ = CuentaCorriente.objects.get_or_create(socio=aviso.socio)
+            movimiento = MovimientoFinanciero.objects.create(
+                cuenta=cuenta,
+                tipo='PAGO',
+                monto=abs(Decimal(str(monto_real))),  # Crédito = positivo
+                descripcion=descripcion,
+                metodo_pago=metodo_pago,
+                fecha=aviso.fecha_declarada,
+                referencia_externa=f"AVISO-{aviso.id}",
+                creado_por=request.user,
+            )
+            aviso.estado = 'VALIDADO'
+            aviso.movimiento_generado = movimiento
+            aviso.validado_por = request.user
+            aviso.fecha_validacion = timezone.now()
+            aviso.save()
+
+        return Response({
+            'ok': 'Pago validado correctamente.',
+            'movimiento_id': str(movimiento.id),
+            'recibo_url': f'/api/v1/finanzas/movimientos/{movimiento.id}/pdf/'
+        }, status=status.HTTP_200_OK)
+
+
+class RechazarAvisoView(APIView):
+    """
+    POST /api/v1/finanzas/avisos/{id}/rechazar/
+    El admin rechaza el aviso indicando el motivo.
+    Body: { "motivo": "El comprobante no coincide con el monto." }
+    """
+    permission_classes = [IsAdminOrProfesorRole]
+
+    def post(self, request, pk):
+        try:
+            aviso = AvisoPago.objects.get(id=pk, socio__club=request.user.club)
+        except AvisoPago.DoesNotExist:
+            return Response({'error': 'Aviso no encontrado.'}, status=status.HTTP_404_NOT_FOUND)
+
+        if aviso.estado != 'PENDIENTE':
+            return Response({'error': f'El aviso ya fue {aviso.get_estado_display()}.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        motivo = request.data.get('motivo', 'Sin motivo especificado.')
+        aviso.estado = 'RECHAZADO'
+        aviso.observacion_rechazo = motivo
+        aviso.validado_por = request.user
+        aviso.fecha_validacion = timezone.now()
+        aviso.save()
+
+        return Response({'ok': 'Aviso rechazado.', 'motivo': motivo})

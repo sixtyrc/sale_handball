@@ -33,6 +33,50 @@ class CategoriaViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(club=self.request.user.club)
 
+    def perform_update(self, serializer):
+        serializer.save(club=self.request.user.club)
+
+    @action(detail=True, methods=['get'])
+    def profesores(self, request, pk=None):
+        categoria = self.get_object()
+        asignaciones = categoria.profesores_asignados.all().select_related('usuario_profe')
+        data = [{
+            'asignacion_id': a.id,
+            'id': a.usuario_profe.id,
+            'nombre': f"{a.usuario_profe.first_name} {a.usuario_profe.last_name}" or a.usuario_profe.email,
+            'rol': a.rol_especifico
+        } for a in asignaciones]
+        return Response(data)
+
+    @action(detail=True, methods=['post'])
+    def asignar_profe(self, request, pk=None):
+        categoria = self.get_object()
+        profe_id = request.data.get('profe_id')
+        from core.models import CustomUser
+        profe = get_object_or_404(CustomUser, id=profe_id, club=request.user.club, role='PROFESOR')
+        
+        from .models import AsignacionProfe
+        asignacion, created = AsignacionProfe.objects.get_or_create(
+            categoria=categoria,
+            usuario_profe=profe
+        )
+        
+        if not created:
+            asignacion.delete()
+            return Response({'status': 'eliminado'})
+            
+        return Response({'status': 'asignado'})
+
+    @action(detail=False, methods=['get'])
+    def disponibles_profes(self, request):
+        from core.models import CustomUser
+        profes = CustomUser.objects.filter(club=request.user.club, role='PROFESOR')
+        data = [{
+            'id': p.id,
+            'nombre': f"{p.first_name} {p.last_name}" or p.email
+        } for p in profes]
+        return Response(data)
+
 class PerfilDeportivoViewSet(viewsets.ModelViewSet):
     serializer_class = PerfilDeportivoSerializer
     permission_classes = [permissions.IsAuthenticated, IsFromClub]
@@ -49,7 +93,8 @@ class PerfilDeportivoViewSet(viewsets.ModelViewSet):
         return base_qs
 
     def perform_create(self, serializer):
-        socio_id = self.request.data.get('socio')
+        socio_data = self.request.data.get('socio')
+        socio_id = socio_data.get('id') if isinstance(socio_data, dict) else socio_data
         socio = get_object_or_404(Socio, id=socio_id, club=self.request.user.club)
         serializer.save(socio=socio)
 

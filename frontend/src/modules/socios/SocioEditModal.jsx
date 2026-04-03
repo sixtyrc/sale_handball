@@ -96,6 +96,17 @@ const SocioEditModal = ({ isOpen, onClose, onSuccess, socio }) => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        
+        // Validación obligatoria
+        if (!formData.nombres || !formData.apellidos || !formData.dni || !formData.fecha_nacimiento || !formData.sexo) {
+            addToast({
+                type: 'warning',
+                title: 'Campos Obligatorios',
+                message: 'Nombre, Apellido, DNI, Fecha de Nacimiento y Sexo son exigibles.'
+            });
+            return;
+        }
+
         setLoading(true);
         setError(null);
 
@@ -169,19 +180,19 @@ const SocioEditModal = ({ isOpen, onClose, onSuccess, socio }) => {
                 {activeTab === 'personal' && (
                     <div className="animate-in fade-in duration-500 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-5">
                         <div className="space-y-1.5">
-                            <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest pl-1">Nombres</label>
+                            <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest pl-1">Nombres *</label>
                             <input required name="nombres" value={formData.nombres} onChange={handleChange} className="w-full px-5 py-4 bg-slate-950 border border-slate-800 rounded-2xl text-white focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all shadow-inner" />
                         </div>
                         <div className="space-y-1.5">
-                            <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest pl-1">Apellidos</label>
+                            <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest pl-1">Apellidos *</label>
                             <input required name="apellidos" value={formData.apellidos} onChange={handleChange} className="w-full px-5 py-4 bg-slate-950 border border-slate-800 rounded-2xl text-white focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all shadow-inner" />
                         </div>
                         <div className="space-y-1.5">
-                            <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest pl-1">DNI</label>
+                            <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest pl-1">DNI *</label>
                             <input required name="dni" value={formData.dni} onChange={handleChange} className="w-full px-5 py-4 bg-slate-950 border border-slate-800 rounded-2xl text-white focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all shadow-inner font-mono" />
                         </div>
                         <div className="space-y-1.5">
-                            <label className="text-[10px] font-black text-blue-500 uppercase tracking-widest pl-1">Fecha Nacimiento</label>
+                            <label className="text-[10px] font-black text-blue-500 uppercase tracking-widest pl-1">Fecha Nacimiento *</label>
                             <input required type="date" name="fecha_nacimiento" value={formData.fecha_nacimiento} onChange={handleChange} className="w-full px-5 py-4 bg-slate-950 border border-slate-800 rounded-2xl text-white focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all shadow-inner" />
                         </div>
                         <div className="space-y-1.5 opacity-60">
@@ -214,8 +225,8 @@ const SocioEditModal = ({ isOpen, onClose, onSuccess, socio }) => {
                         </div>
                         
                         <div className="space-y-1.5">
-                            <label className="text-[10px] font-black text-blue-400 uppercase tracking-widest pl-1">Sexo / Género</label>
-                            <select name="sexo" value={formData.sexo} onChange={handleChange} className="w-full px-5 py-4 bg-slate-950 border border-slate-800 rounded-2xl text-white focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 appearance-none">
+                            <label className="text-[10px] font-black text-blue-400 uppercase tracking-widest pl-1">Sexo / Género *</label>
+                            <select required name="sexo" value={formData.sexo} onChange={handleChange} className="w-full px-5 py-4 bg-slate-950 border border-slate-800 rounded-2xl text-white focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 appearance-none">
                                 <option value="">Seleccionar...</option>
                                 <option value="MASCULINO">Masculino</option>
                                 <option value="FEMENINO">Femenino</option>

@@ -10,9 +10,12 @@
 - El administrativo vincula al profesor con categorías específicas (ej: Menores Masculino, Cadetes Masculino, Juveniles Femenino).
 - El profesor **solo** tendrá visibilidad de los perfiles deportivos vinculados a esas categorías.
 
-### 2. Elegibilidad Dinámica y "Refuerzos"
-- Al crear una convocatoria para un evento (partido), el sistema mostrará por defecto la lista de la categoría del evento.
-- Existirá una sección de **"Refuerzos Disponibles"** que mostrará jugadores de la categoría inmediata inferior (ej: para un partido de Cadetes, mostrar jugadores de Menores).
+### 2. Elegibilidad- **Sincronización Alta vs Edición (CRÍTICO)**: El error detectado (modificar un modal y no el otro) se anota como restricción. Toda mejora en la ficha del Socio debe aplicarse a `SocioFormModal` y `SocioEditModal` simultáneamente.
+- **Campos Mandatorios**: Nombres, Apellidos, DNI, Fecha de Nacimiento y Sexo son **ESTRICTAMENTE OBLIGATORIOS**. Sin ellos, la lógica de categorización automática y federación falla. Se debe usar el atributo `required` y validación visual con `*`.
+- **Refuerzos On-Demand**: La citación debe incluir un buscador dinámico que permita "traer" jugadores de cualquier otra categoría.
+
+**Última Actualización:** 2026-04-03 - Sincronización de campos obligatorios y validación premium.
+detes, mostrar jugadores de Menores).
 
 ### 3. Alertas Preventivas (Soft Warnings)
 Las convocatorias **NO** se bloquean, pero muestran badges informativos:
@@ -52,7 +55,9 @@ def get_queryset(self):
 - **Avatar intermitente**: El avatar del jugador tendrá un borde rojo intermitente si tiene warnings críticos.
 - **Acceso Directo**: El profesor podrá registrar la asistencia y las estadísticas del partido en ≤ 3 toques desde su Home.
 - **Copyright de Marca**: Mantener el pie con "Desarrollado por ctsoft.com.ar" en todas las planillas de convocatoria generadas (PDF).
+- **Vinculación Inteligente (Nuevo)**: El modal de vinculación usa el endpoint `/api/v1/socios/disponibles-vincular/` para filtrar por edad y sexo automáticamente. Se permite desactivar el filtro (toggle) para casos especiales.
+- **Desactivación de Categorías**: Las categorías tienen un campo `activo` (bool). Si `activo == False`, se ignoran en la categorización automática y se ocultan del sidebar por defecto (soft-disable).
 
 ---
 
-*Fecha: 2026-04-01 – Documentado por Antigravity*
+*Fecha: 2026-04-03 – Actualizado por Antigravity: Filtros inteligentes y categorías dinámicas.*

@@ -17,36 +17,16 @@ class Categoria(models.Model):
     descripcion = models.TextField(blank=True, null=True)
     genero = models.CharField(max_length=20, choices=GENERO_CHOICES)
     orden = models.PositiveIntegerField(default=0, help_text="Orden de edad (0=Mayores, 1=Juniors, 2=Juveniles, etc. o viceversa)")
+    activo = models.BooleanField(default=True, help_text="Permite desactivar categorías que el club no utiliza (ej. Senior)")
     
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-
-    def save(self, *args, **kwargs):
-        is_new = self._state.adding
-        super().save(*args, **kwargs)
-        
-        # Automatización de Categoría (CAH Rules)
-        # Importamos aquí para evitar circular dependency
-        from deportes.models import PerfilDeportivo, Categoria
-        
-        perfil, created = PerfilDeportivo.objects.get_or_create(socio=self)
-        
-        # Si tiene fecha de nacimiento, determinamos su categoría automática
-        if self.fecha_nacimiento:
-            categoria_auto = Categoria.get_category_by_age(
-                birth_year=self.fecha_nacimiento.year,
-                gender=self.sexo if self.sexo in ['MASCULINO', 'FEMENINO'] else 'MIXTO',
-                club=self.club
-            )
-            if categoria_auto:
-                perfil.categoria_actual = categoria_auto
-                perfil.save()
 
     def __str__(self):
         return f"{self.nombre} ({self.genero})"
 
     @classmethod
-    def get_category_by_age(cls, birth_year, gender, club):
+    def get_category_by_age(cls, club, birth_year, gender):
         """
         Lógica de Categorización Automática (Confederación Argentina de Handball - CAH)
         Basada en el año calendario actual.
@@ -69,7 +49,8 @@ class Categoria(models.Model):
         return cls.objects.filter(
             club=club, 
             nombre__icontains=target_name,
-            genero__in=[gender, 'MIXTO']
+            genero__in=[gender, 'MIXTO'],
+            activo=True
         ).first()
 
 class PerfilDeportivo(models.Model):

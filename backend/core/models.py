@@ -23,6 +23,7 @@ class CustomUser(AbstractUser):
     ROLE_CHOICES = (
         ('ADMIN', 'Admin / Administrativo'),
         ('PROFESOR', 'Profesor'),
+        ('SOCIO', 'Socio (Portal Autogestión)'),
         ('SOCIO_TUTOR', 'Socio / Tutor'),
         ('DIRIGENTE', 'Dirigente / Comisión'),
     )
@@ -30,6 +31,7 @@ class CustomUser(AbstractUser):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     club = models.ForeignKey(Club, on_delete=models.CASCADE, related_name='usuarios', null=True, blank=True)
     role = models.CharField(max_length=50, choices=ROLE_CHOICES, default='SOCIO_TUTOR')
+    primer_ingreso = models.BooleanField(default=False, help_text="Si True, el socio debe cambiar su contraseña al primer login.")
 
     def __str__(self):
         return f"{self.email} - {self.role}"

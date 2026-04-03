@@ -4,10 +4,16 @@ from core.serializers import SocioSerializer
 from .eligibility import check_player_health
 
 class CategoriaSerializer(serializers.ModelSerializer):
+    profesores_nombres = serializers.SerializerMethodField()
+
     class Meta:
         model = Categoria
-        fields = ['id', 'nombre', 'descripcion', 'genero', 'club']
+        fields = ['id', 'nombre', 'descripcion', 'genero', 'club', 'activo', 'profesores_nombres']
         read_only_fields = ['id', 'club']
+
+    def get_profesores_nombres(self, obj):
+        return [f"{a.usuario_profe.first_name} {a.usuario_profe.last_name}" or a.usuario_profe.email 
+                for a in obj.profesores_asignados.all().select_related('usuario_profe')]
 
 class DocumentoDigitalSerializer(serializers.ModelSerializer):
     subido_por_nombre = serializers.CharField(source='subido_por.username', read_only=True)

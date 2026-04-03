@@ -20,6 +20,12 @@ const ManualPage = lazy(() => import('./modules/manual/ManualPage'));
 const EventosPage = lazy(() => import('./pages/EventosPage'));
 const EventoDetailPage = lazy(() => import('./pages/EventoDetailPage'));
 
+// Portal del Socio (autogestión — autenticación propia via sessionStorage)
+const SocioLoginPage = lazy(() => import('./pages/socio/SocioLoginPage'));
+const SocioCambiarClavePage = lazy(() => import('./pages/socio/SocioCambiarClavePage'));
+const SocioDashboardPage = lazy(() => import('./pages/socio/SocioDashboardPage'));
+
+
 const ProtectedRoute = ({ children }) => {
   const { isAuthenticated } = useAuthStore();
   return isAuthenticated ? children : <Navigate to="/login" />;
@@ -41,7 +47,12 @@ function App() {
           <Route path="/locales/:slug/login" element={<PinEntry />} />
           <Route path="/locales/:slug/pos" element={<CanteenOperator />} />
 
-          {/* Login Central */}
+          {/* Portal del Socio (autenticación propia) */}
+          <Route path="/socio/login" element={<SocioLoginPage />} />
+          <Route path="/socio/cambiar-clave" element={<SocioCambiarClavePage />} />
+          <Route path="/socio/dashboard" element={<SocioDashboardPage />} />
+
+          {/* Login Central (Admin/Staff) */}
           <Route path="/login" element={<LoginPage />} />
 
           {/* Rutas Protegidas de Administración */}

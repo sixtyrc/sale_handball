@@ -1,6 +1,27 @@
 from decimal import Decimal
 from rest_framework import serializers
-from .models import CuentaCorriente, MovimientoFinanciero
+from .models import CuentaCorriente, MovimientoFinanciero, AvisoPago
+
+
+class AvisoPagoSerializer(serializers.ModelSerializer):
+    socio_nombre = serializers.SerializerMethodField()
+    estado_display = serializers.SerializerMethodField()
+
+    class Meta:
+        model = AvisoPago
+        fields = [
+            'id', 'socio', 'socio_nombre', 'monto_declarado', 'fecha_declarada',
+            'descripcion', 'comprobante', 'estado', 'estado_display',
+            'observacion_rechazo', 'movimiento_generado', 'created_at'
+        ]
+        read_only_fields = ['id', 'estado', 'movimiento_generado', 'created_at']
+
+    def get_socio_nombre(self, obj):
+        return f"{obj.socio.apellidos}, {obj.socio.nombres}"
+
+    def get_estado_display(self, obj):
+        return obj.get_estado_display()
+
 
 
 class MovimientoFinancieroSerializer(serializers.ModelSerializer):

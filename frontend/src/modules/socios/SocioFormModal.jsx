@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import Modal from '../../components/common/Modal';
-import { UserPlus, Loader2, Info, MapPin } from 'lucide-react';
+import { UserPlus, Loader2, Info, MapPin, Users, Trophy } from 'lucide-react';
 import api from '../../services/api';
 import { useUIStore } from '../../store/uiStore';
 
@@ -62,6 +62,17 @@ const SocioFormModal = ({ isOpen, onClose, onSuccess }) => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        
+        // Validación obligatoria
+        if (!formData.nombres || !formData.apellidos || !formData.dni || !formData.fecha_nacimiento || !formData.sexo) {
+            addToast({
+                type: 'warning',
+                title: 'Campos Obligatorios',
+                message: 'Por favor completa Nombre, Apellido, DNI, Fecha de Nacimiento y Sexo.'
+            });
+            return;
+        }
+
         setLoading(true);
         setError(null);
 
@@ -142,15 +153,15 @@ const SocioFormModal = ({ isOpen, onClose, onSuccess }) => {
                 {activeTab === 'personal' && (
                     <div className="animate-in fade-in duration-500 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-5">
                         <div className="space-y-1.5">
-                            <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest pl-1">Nombres</label>
+                            <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest pl-1">Nombres *</label>
                             <input required name="nombres" value={formData.nombres} onChange={handleChange} className="w-full px-5 py-4 bg-slate-950 border border-slate-800 rounded-2xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-inner" />
                         </div>
                         <div className="space-y-1.5">
-                            <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest pl-1">Apellidos</label>
+                            <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest pl-1">Apellidos *</label>
                             <input required name="apellidos" value={formData.apellidos} onChange={handleChange} className="w-full px-5 py-4 bg-slate-950 border border-slate-800 rounded-2xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-inner" />
                         </div>
                         <div className="space-y-1.5">
-                            <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest pl-1">DNI</label>
+                            <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest pl-1">DNI *</label>
                             <input required name="dni" value={formData.dni} onChange={handleChange} className="w-full px-5 py-4 bg-slate-950 border border-slate-800 rounded-2xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all font-mono shadow-inner" />
                         </div>
                         <div className="space-y-1.5 opacity-60">
@@ -167,7 +178,7 @@ const SocioFormModal = ({ isOpen, onClose, onSuccess }) => {
                             </div>
                         </div>
                         <div className="space-y-1.5">
-                            <label className="text-[10px] font-black text-blue-500 uppercase tracking-widest pl-1">Fecha Nacimiento</label>
+                            <label className="text-[10px] font-black text-blue-500 uppercase tracking-widest pl-1">Fecha Nacimiento *</label>
                             <input required type="date" name="fecha_nacimiento" value={formData.fecha_nacimiento} onChange={handleChange} className="w-full px-5 py-4 bg-slate-950 border border-slate-800 rounded-2xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-inner" />
                         </div>
 
@@ -189,8 +200,8 @@ const SocioFormModal = ({ isOpen, onClose, onSuccess }) => {
                         </div>
                         
                         <div className="space-y-1.5">
-                            <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest pl-1">Sexo / Género</label>
-                            <select name="sexo" value={formData.sexo} onChange={handleChange} className="w-full px-5 py-4 bg-slate-950 border border-slate-800 rounded-2xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 appearance-none">
+                            <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest pl-1">Sexo / Género *</label>
+                            <select required name="sexo" value={formData.sexo} onChange={handleChange} className="w-full px-5 py-4 bg-slate-950 border border-slate-800 rounded-2xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 appearance-none">
                                 <option value="">Seleccionar...</option>
                                 <option value="MASCULINO">Masculino</option>
                                 <option value="FEMENINO">Femenino</option>

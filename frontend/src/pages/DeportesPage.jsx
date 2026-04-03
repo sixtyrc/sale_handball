@@ -3,22 +3,30 @@ import MainLayout from '../components/layout/MainLayout';
 import api from '../services/api';
 import AthleteCard from '../modules/deportes/AthleteCard';
 import { 
-    Trophy, 
-    Filter, 
-    ChevronRight, 
-    Users, 
-    Plus, 
+    Trash2,
+    Eye,
+    EyeOff,
+    ToggleLeft,
+    ToggleRight,
+    ChevronRight,
+    Plus,
     Loader2,
     Activity,
     Layers,
     UserPlus,
-    Trash2
+    Users,
+    Trophy,
+    Filter,
+    Edit,
+    RotateCcw
 } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 import { useUIStore } from '../store/uiStore';
 import CategoriaFormModal from '../modules/deportes/CategoriaFormModal';
 import VincularSocioModal from '../modules/deportes/VincularSocioModal';
 import StatsGlobalesModal from '../modules/deportes/StatsGlobalesModal';
+import AsignarProfeModal from '../modules/deportes/AsignarProfeModal';
+import { ShieldCheck } from 'lucide-react';
 
 const DeportesPage = () => {
     const { user } = useAuthStore();
@@ -30,6 +38,9 @@ const DeportesPage = () => {
     const [isCatModalOpen, setIsCatModalOpen] = useState(false);
     const [isVincularModalOpen, setIsVincularModalOpen] = useState(false);
     const [isStatsModalOpen, setIsStatsModalOpen] = useState(false);
+    const [isAsignarProfeOpen, setIsAsignarProfeOpen] = useState(false);
+    const [editingCategory, setEditingCategory] = useState(null);
+    const [showInactive, setShowInactive] = useState(false);
 
     useEffect(() => {
         fetchInitialData();
@@ -56,25 +67,19 @@ const DeportesPage = () => {
         }
     };
 
-    const handleDeleteCategory = async (catId, e) => {
+    const handleToggleStatus = async (cat, e) => {
         e.stopPropagation();
-        if (!window.confirm('¿Realmente deseas eliminar esta categoría? Se desvincularán todos los jugadores.')) return;
-        
         try {
-            await api.delete(`deportes/categorias/${catId}/`);
-            if (activeCategory === catId) setActiveCategory(null);
-            fetchInitialData();
+            // El backend usa 'activo'
+            await api.patch(`deportes/categorias/${cat.id}/`, { activo: !cat.activo });
             addToast({
                 type: 'success',
-                title: 'Categoría Eliminada',
-                message: 'La categoría y sus vínculos se han borrado correctamente.'
+                title: !cat.activo ? 'Categoría Activada' : 'Categoría Desactivada',
+                message: `La categoría ${cat.nombre} ahora está ${!cat.activo ? 'activa' : 'inactiva'}.`
             });
+            fetchInitialData();
         } catch (error) {
-            addToast({
-                type: 'error',
-                title: 'Acceso Denegado',
-                message: 'Error al eliminar la categoría. Verifica tus permisos.'
-            });
+            addToast({ type: 'error', title: 'Error', message: 'No se pudo cambiar el estado.' });
         }
     };
 
@@ -111,63 +116,99 @@ const DeportesPage = () => {
 
             <CategoriaFormModal 
                 isOpen={isCatModalOpen} 
-                onClose={() => setIsCatModalOpen(false)} 
-                onSuccess={fetchInitialData} 
+                onClose={() => {
+                    setIsCatModalOpen(false);
+                    setEditingCategory(null);
+                }} 
+                onSuccess={fetchInitialData}
+                category={editingCategory}
             />
 
             <div className="flex flex-col lg:flex-row gap-8">
                 {/* Categorías Sidebar */}
                 <div className="w-full lg:w-72 space-y-4">
-                    <h4 className="text-slate-500 uppercase tracking-widest text-[10px] font-black px-4 flex items-center gap-2">
-                        <Layers size={14} />
-                        Categorías Vigentes
-                    </h4>
+                    <div className="flex items-center justify-between px-4">
+                        <h4 className="text-slate-500 uppercase tracking-widest text-[10px] font-black flex items-center gap-2">
+                            <Layers size={14} />
+                            Categorías
+                        </h4>
+                        <button 
+                            onClick={() => setShowInactive(!showInactive)}
+                            className={`p-1.5 rounded-lg transition-all ${showInactive ? 'bg-blue-600/20 text-blue-400' : 'text-slate-600 hover:text-slate-400'}`}
+                            title={showInactive ? "Ocultar Inactivas" : "Mostrar Inactivas"}
+                        >
+                            {showInactive ? <Eye size={14} /> : <EyeOff size={14} />}
+                        </button>
+                    </div>
                     
                     <div className="space-y-1">
                         {loading ? (
                             <div className="p-4 space-y-4">
                                 {[1, 2, 3].map(n => <div key={n} className="h-12 bg-slate-900/50 rounded-xl animate-pulse" />)}
                             </div>
-                        ) : categorias.map((cat) => (
-                            <div key={cat.id} className="relative group/item">
-                                <button
-                                    onClick={() => setActiveCategory(cat.id)}
-                                    className={`w-full flex items-center justify-between px-4 py-4 rounded-2xl transition-all duration-300 ${
-                                        activeCategory === cat.id 
-                                        ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20 translate-x-2' 
-                                        : 'text-slate-400 hover:bg-slate-900 hover:text-white'
-                                    }`}
-                                >
-                                    <div className="flex items-center gap-4">
-                                        <div className={`w-2 h-2 rounded-full ${
-                                            activeCategory === cat.id ? 'bg-white' : 'bg-slate-700 group-hover:bg-blue-400'
-                                        }`} />
-                                        <div className="flex items-center gap-2">
-                                            <span className="font-extrabold tracking-tight text-sm uppercase">{cat.nombre}</span>
-                                            <span className={`text-[9px] font-black px-1.5 py-0.5 rounded ${
-                                                cat.genero === 'MASCULINO' ? (activeCategory === cat.id ? 'bg-white/20 text-white' : 'bg-blue-500/20 text-blue-400') : 
-                                                cat.genero === 'FEMENINO' ? (activeCategory === cat.id ? 'bg-white/20 text-white' : 'bg-pink-500/20 text-pink-400') : 
-                                                'bg-slate-700 text-slate-400'
-                                            }`}>
-                                                {cat.genero === 'MASCULINO' ? 'M' : cat.genero === 'FEMENINO' ? 'F' : 'X'}
-                                            </span>
+                        ) : (
+                            categorias.filter(c => showInactive ? true : c.activo).length > 0 ? (
+                                categorias.filter(c => showInactive ? true : c.activo).map((cat) => (
+                                    <div key={cat.id} className="relative group/item">
+                                        <button
+                                            onClick={() => setActiveCategory(cat.id)}
+                                            className={`w-full flex items-center justify-between px-4 py-4 rounded-2xl transition-all duration-300 ${
+                                                activeCategory === cat.id 
+                                                ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20 translate-x-2' 
+                                                : `text-slate-400 hover:bg-slate-900 hover:text-white ${!cat.activo ? 'opacity-40 grayscale' : ''}`
+                                            }`}
+                                        >
+                                            <div className="flex items-center gap-4">
+                                                <div className={`w-2 h-2 rounded-full ${
+                                                    activeCategory === cat.id ? 'bg-white' : (cat.activo ? 'bg-slate-700' : 'bg-red-900')
+                                                }`} />
+                                                <div className="flex items-center gap-2">
+                                                    <span className="font-extrabold tracking-tight text-sm uppercase">{cat.nombre}</span>
+                                                    <span className={`text-[9px] font-black px-1.5 py-0.5 rounded ${
+                                                        cat.genero === 'MASCULINO' ? (activeCategory === cat.id ? 'bg-white/20 text-white' : 'bg-blue-500/20 text-blue-400') : 
+                                                        cat.genero === 'FEMENINO' ? (activeCategory === cat.id ? 'bg-white/20 text-white' : 'bg-pink-500/20 text-pink-400') : 
+                                                        'bg-slate-700 text-slate-400'
+                                                    }`}>
+                                                        {cat.genero === 'MASCULINO' ? 'M' : cat.genero === 'FEMENINO' ? 'F' : 'X'}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <ChevronRight size={16} className={`${activeCategory === cat.id ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'} transition-opacity`} />
+                                        </button>
+                                        
+                                        {/* Action Buttons - Always Visible */}
+                                        <div className="absolute right-10 top-1/2 -translate-y-1/2 flex items-center gap-1 transition-opacity">
+                                             {(user?.role === 'ADMIN' || user?.role === 'DIRIGENTE') && (
+                                                <>
+                                                    <button 
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            setEditingCategory(cat);
+                                                            setIsCatModalOpen(true);
+                                                        }}
+                                                        className="p-2 text-slate-500 hover:text-blue-400 transition-colors"
+                                                        title="Editar Nombre/Config"
+                                                    >
+                                                        <Edit size={16} />
+                                                    </button>
+                                                    <button 
+                                                        onClick={(e) => handleToggleStatus(cat, e)}
+                                                        className={`p-2 transition-colors ${cat.activo ? 'text-slate-500 hover:text-red-400' : 'text-emerald-500 hover:text-emerald-400'}`}
+                                                        title={cat.activo ? "Desactivar" : "Activar"}
+                                                    >
+                                                        {cat.activo ? <ToggleRight size={18} /> : <ToggleLeft size={18} />}
+                                                    </button>
+                                                </>
+                                            )}
                                         </div>
                                     </div>
-                                    <ChevronRight size={16} className={`${activeCategory === cat.id ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'} transition-opacity`} />
-                                </button>
-                                
-                                {/* Admin Trash Button */}
-                                {user?.role === 'ADMIN' && (
-                                    <button 
-                                        onClick={(e) => handleDeleteCategory(cat.id, e)}
-                                        className="absolute right-10 top-1/2 -translate-y-1/2 p-2 text-red-500/50 hover:text-red-500 opacity-0 group-hover/item:opacity-100 transition-opacity"
-                                        title="Eliminar Categoría"
-                                    >
-                                        <Trash2 size={16} />
-                                    </button>
-                                )}
-                            </div>
-                        ))}
+                                ))
+                            ) : (
+                                <div className="p-8 text-center text-[10px] font-black text-slate-600 uppercase tracking-widest border border-dashed border-slate-800 rounded-2xl mx-4">
+                                    No hay categorías {showInactive ? '' : 'activas'}
+                                </div>
+                            )
+                        )}
                     </div>
                 </div>
 
@@ -196,6 +237,16 @@ const DeportesPage = () => {
                                         </div>
                                         <h3 className="text-3xl font-black text-white mb-2">{currentCategory?.nombre}</h3>
                                         <p className="text-slate-400 font-light text-sm italic">{currentCategory?.descripcion || 'Sin descripción para esta categoría'}</p>
+                                        
+                                        {(user?.role === 'ADMIN' || user?.role === 'DIRIGENTE') && (
+                                            <button 
+                                                onClick={() => setIsAsignarProfeOpen(true)}
+                                                className="mt-4 flex items-center gap-2 bg-blue-600/10 hover:bg-blue-600/20 text-blue-500 border border-blue-500/20 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all"
+                                            >
+                                                <ShieldCheck size={14} />
+                                                Gestionar Cuerpo Técnico
+                                            </button>
+                                        )}
                                     </div>
                                     
                                     <div className="flex gap-8">
@@ -251,6 +302,13 @@ const DeportesPage = () => {
                 onClose={() => setIsStatsModalOpen(false)}
                 categorias={categorias}
                 athletes={athletes}
+            />
+
+            <AsignarProfeModal
+                isOpen={isAsignarProfeOpen}
+                onClose={() => setIsAsignarProfeOpen(false)}
+                categoriaId={activeCategory}
+                categoriaNombre={currentCategory?.nombre}
             />
         </MainLayout>
     );

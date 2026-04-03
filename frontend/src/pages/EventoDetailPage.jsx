@@ -44,7 +44,9 @@ const EventoDetailPage = () => {
             const evRes = await api.get(`actividad/eventos/${id}/`);
             setEvento(evRes.data);
 
-            const convRes = await api.get(`actividad/eventos/${id}/convocables/`);
+            const convRes = await api.get(`actividad/eventos/${id}/convocables/`, {
+                params: { categoria_id: evRes.data.categoria }
+            });
             setConvocables(convRes.data);
             
             // INTELIGENCIA: Los que vienen de la categoría titular ya vienen pre-tildados

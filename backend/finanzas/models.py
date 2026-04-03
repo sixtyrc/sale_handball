@@ -79,3 +79,60 @@ class MovimientoFinanciero(models.Model):
         verbose_name = "Movimiento Financiero"
         verbose_name_plural = "Movimientos Financieros"
         ordering = ['-fecha', '-created_at']
+
+
+def comprobante_path(instance, filename):
+    return f"comprobantes/club_{instance.socio.club.id}/socio_{instance.socio.id}/{filename}"
+
+
+class AvisoPago(models.Model):
+    """
+    El socio avisa que realizó un pago (ej: transferencia).
+    El admin lo valida → recién entonces se genera el MovimientoFinanciero real.
+    NUNCA auto-genera el movimiento. Siempre requiere aprobación humana.
+    """
+    ESTADO_CHOICES = (
+        ('PENDIENTE', 'Pendiente de Revisión'),
+        ('VALIDADO', 'Validado — Recibo Generado'),
+        ('RECHAZADO', 'Rechazado'),
+    )
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    socio = models.ForeignKey(
+        Socio, on_delete=models.CASCADE, related_name='avisos_pago'
+    )
+    monto_declarado = models.DecimalField(max_digits=10, decimal_places=2)
+    fecha_declarada = models.DateField()
+    descripcion = models.CharField(max_length=255, help_text="Ej: Cuota Abril 2026")
+    comprobante = models.ImageField(
+        upload_to=comprobante_path, null=True, blank=True,
+        help_text="Foto o captura del comprobante de transferencia (opcional)"
+    )
+    estado = models.CharField(max_length=20, choices=ESTADO_CHOICES, default='PENDIENTE')
+    observacion_rechazo = models.TextField(
+        blank=True, null=True,
+        help_text="Motivo del rechazo para mostrarle al socio."
+    )
+
+    # Se llena cuando el admin valida y genera el movimiento real
+    movimiento_generado = models.OneToOneField(
+        MovimientoFinanciero, on_delete=models.SET_NULL,
+        null=True, blank=True, related_name='aviso_origen'
+    )
+
+    validado_por = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL,
+        null=True, blank=True, related_name='avisos_validados'
+    )
+    fecha_validacion = models.DateTimeField(null=True, blank=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"Aviso [{self.estado}] {self.socio} — ${self.monto_declarado} ({self.fecha_declarada})"
+
+    class Meta:
+        verbose_name = "Aviso de Pago"
+        verbose_name_plural = "Avisos de Pago"
+        ordering = ['-created_at']

@@ -1,5 +1,5 @@
 from decimal import Decimal
-from django.db import transaction
+from django.db import transaction, models
 from rest_framework import viewsets, permissions, status
 from rest_framework.response import Response
 from rest_framework.decorators import action
@@ -48,18 +48,18 @@ class EventoViewSet(viewsets.ModelViewSet):
             socio__club=evento.club
         ).select_related('socio', 'categoria_actual')
 
-        # 2. Filtrado Lógico
+        # 2. Filtrado Lógico (Soporta filtrado por ID explícito para mayor robustez)
+        cat_id = request.query_params.get('categoria_id') or evento.categoria_id
+        
         if search_query:
             # Búsqueda explícita de refuerzo
             perfiles = perfiles_base.filter(
                 models.Q(socio__nombres__icontains=search_query) |
                 models.Q(socio__apellidos__icontains=search_query)
             )
-        elif evento.categoria:
-            # Caso Estándar: Traer categoría titular + pre-seleccionarlos
-            perfiles = perfiles_base.filter(
-                categoria_actual=evento.categoria
-            )
+        elif cat_id:
+            # Caso Estándar: Traer categoría titular por ID (Robusto vs errores de nombre)
+            perfiles = perfiles_base.filter(categoria_actual_id=cat_id)
         else:
             # Caso Evento General
             perfiles = perfiles_base

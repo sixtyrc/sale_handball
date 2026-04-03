@@ -1,6 +1,7 @@
 from rest_framework import viewsets, permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.decorators import action
 from rest_framework_simplejwt.tokens import RefreshToken
 from .models import Club, CustomUser, Socio, GrupoFamiliar
 from .serializers import ClubSerializer, CustomUserSerializer, SocioSerializer, GrupoFamiliarSerializer
@@ -22,6 +23,7 @@ class LoginView(APIView):
                 return Response({
                     'refresh': str(refresh),
                     'access': str(refresh.access_token),
+                    'primer_ingreso': user.primer_ingreso,
                     'user': CustomUserSerializer(user).data
                 })
             return Response({'error': 'Contraseña incorrecta'}, status=status.HTTP_401_UNAUTHORIZED)
@@ -94,11 +96,97 @@ class SocioViewSet(viewsets.ModelViewSet):
                 nuevo_nro = 1
                 
             nro_socio_str = str(nuevo_nro).zfill(5)
-            serializer.save(club=club, nro_socio=nro_socio_str)
+            socio = serializer.save(club=club, nro_socio=nro_socio_str)
         else:
             # Si lo mandan manualmente y no está vacío, lo respetamos pero rellenamos a 5 dígitos
             nro_socio_str = str(nro_socio).strip().zfill(5)
-            serializer.save(club=club, nro_socio=nro_socio_str)
+            socio = serializer.save(club=club, nro_socio=nro_socio_str)
+
+        # ── Auto-creación de usuario de autogestión para el socio ──
+        if socio and not socio.usuario:
+            try:
+                dni = socio.dni
+                # Evitar duplicados: si ya existe un user con ese dni, lo vinculamos
+                user, created = CustomUser.objects.get_or_create(
+                    username=dni,
+                    defaults={
+                        'email': socio.email_contacto or '',
+                        'first_name': socio.nombres,
+                        'last_name': socio.apellidos,
+                        'club': club,
+                        'role': 'SOCIO',
+                        'primer_ingreso': True,
+                    }
+                )
+                if created:
+                    user.set_password(dni)
+                    user.save()
+                socio.usuario = user
+                socio.save(update_fields=['usuario'])
+
+                # Enviar mail de bienvenida si tiene correo configurado
+                if socio.email_contacto:
+                    from django.core.mail import send_mail
+                    from django.conf import settings
+                    send_mail(
+                        subject='Bienvenido al Club - Tus datos de acceso',
+                        message=(
+                            f'Hola {socio.nombres},\n\n'
+                            f'Ya podés acceder al portal del socio con:\n'
+                            f'  Usuario: {dni}\n'
+                            f'  Contraseña: {dni}\n\n'
+                            f'Te pediremos que cambies la contraseña al primer ingreso.\n\n'
+                            f'Saludos, el equipo del Club.'
+                        ),
+                        from_email=settings.DEFAULT_FROM_EMAIL,
+                        recipient_list=[socio.email_contacto],
+                        fail_silently=True,  # No rompemos el alta si el mail falla
+                    )
+            except Exception as e:
+                print(f"⚠️ Error al crear usuario automático para socio {socio.dni}: {e}")
+
+    @action(detail=False, methods=['get'], url_path='disponibles-vincular')
+    def disponibles_vincular(self, request):
+        """
+        Lista de socios que NO tienen perfil deportivo aún, filtrados por la categoría destino.
+        Permite una vinculación inteligente (edad y sexo).
+        """
+        from deportes.models import Categoria, PerfilDeportivo
+        from django.db.models import Exists, OuterRef
+        from datetime import date
+        from .models import Socio
+        from .serializers import SocioSerializer
+        
+        cat_id = request.query_params.get('categoria_id')
+        if not cat_id:
+            return Response({"error": "Debe especificar una categoria_id"}, status=400)
+            
+        categoria = get_object_or_404(Categoria, id=cat_id, club=request.user.club)
+        
+        # Filtro base: no deben tener PerfilDeportivo
+        qs = Socio.objects.filter(club=request.user.club).annotate(
+            tiene_perfil=Exists(PerfilDeportivo.objects.filter(socio=OuterRef('pk')))
+        ).filter(tiene_perfil=False)
+        
+        # Filtro por Sexo (si la categoría no es Mixto)
+        if categoria.genero != 'MIXTO':
+            qs = qs.filter(sexo=categoria.genero)
+            
+        socios_data = []
+        for s in qs:
+            sugerida = Categoria.get_category_by_age(s.club, s.fecha_nacimiento.year, s.sexo)
+            
+            socios_data.append({
+                'id': s.id,
+                'nombres': s.nombres,
+                'apellidos': s.apellidos,
+                'dni': s.dni,
+                'fecha_nacimiento': s.fecha_nacimiento,
+                'categoria_sugerida': sugerida.nombre if sugerida else "Sin Categoría",
+                'coincide_categoria': sugerida.id == categoria.id if sugerida else False
+            })
+            
+        return Response(socios_data)
 
 class SocioPublicCheckView(APIView):
     """
@@ -133,6 +221,8 @@ class SocioPublicCheckView(APIView):
             return Response({'error': 'Socio no encontrado'}, status=status.HTTP_404_NOT_FOUND)
 
 
+        return Response(socios_data)
+
 class GrupoFamiliarViewSet(viewsets.ModelViewSet):
     """
     CRUD de Grupos Familiares del club.
@@ -146,3 +236,122 @@ class GrupoFamiliarViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(club=self.request.user.club)
+
+
+class CambiarPasswordView(APIView):
+    """
+    Endpoint para que el socio cambie su contraseña.
+    Si es primer ingreso, marca primer_ingreso=False al completar.
+    POST /api/v1/auth/cambiar-password/
+    Body: { "password_actual": "...", "password_nuevo": "...", "password_confirmar": "..." }
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        user = request.user
+        password_actual = request.data.get('password_actual')
+        password_nuevo = request.data.get('password_nuevo')
+        password_confirmar = request.data.get('password_confirmar')
+
+        if not user.check_password(password_actual):
+            return Response({'error': 'La contraseña actual es incorrecta.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if not password_nuevo or len(password_nuevo) < 6:
+            return Response({'error': 'La nueva contraseña debe tener al menos 6 caracteres.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if password_nuevo != password_confirmar:
+            return Response({'error': 'Las contraseñas no coinciden.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        user.set_password(password_nuevo)
+        user.primer_ingreso = False
+        user.save()
+
+        return Response({'ok': 'Contraseña actualizada correctamente.'})
+
+
+class SolicitarResetPasswordView(APIView):
+    """
+    Genera un token de reseteo y lo envía por email via Resend.
+    POST /api/v1/auth/solicitar-reset/
+    Body: { "email": "..." }
+    """
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request):
+        from django.contrib.auth.tokens import default_token_generator
+        from django.utils.encoding import force_bytes
+        from django.utils.http import urlsafe_base64_encode
+        from django.core.mail import send_mail
+        from django.conf import settings
+
+        email = request.data.get('email', '').strip()
+        if not email:
+            return Response({'error': 'Email requerido.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            user = CustomUser.objects.get(email=email)
+        except CustomUser.DoesNotExist:
+            # Por seguridad respondemos OK igual (no revelar si el mail existe)
+            return Response({'ok': 'Si el email está registrado, recibirás un enlace.'})
+
+        uid = urlsafe_base64_encode(force_bytes(user.pk))
+        token = default_token_generator.make_token(user)
+
+        # URL del portal del socio con el token
+        reset_url = f"http://localhost:3051/socio/reset-password/{uid}/{token}/"
+
+        send_mail(
+            subject='Restablecé tu contraseña - Club',
+            message=(
+                f'Hola {user.first_name},\n\n'
+                f'Hacé clic en el siguiente enlace para restablecer tu contraseña:\n\n'
+                f'{reset_url}\n\n'
+                f'Si no solicitaste esto, ignorá este mensaje.\n\n'
+                f'Saludos, el equipo del Club.'
+            ),
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[email],
+            fail_silently=False,
+        )
+
+        return Response({'ok': 'Si el email está registrado, recibirás un enlace.'})
+
+
+class ConfirmarResetPasswordView(APIView):
+    """
+    Confirma el token y aplica la nueva contraseña.
+    POST /api/v1/auth/confirmar-reset/
+    Body: { "uid": "...", "token": "...", "password_nuevo": "...", "password_confirmar": "..." }
+    """
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request):
+        from django.contrib.auth.tokens import default_token_generator
+        from django.utils.encoding import force_str
+        from django.utils.http import urlsafe_base64_decode
+
+        uid = request.data.get('uid')
+        token = request.data.get('token')
+        password_nuevo = request.data.get('password_nuevo')
+        password_confirmar = request.data.get('password_confirmar')
+
+        if password_nuevo != password_confirmar:
+            return Response({'error': 'Las contraseñas no coinciden.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if not password_nuevo or len(password_nuevo) < 6:
+            return Response({'error': 'La contraseña debe tener al menos 6 caracteres.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            user_id = force_str(urlsafe_base64_decode(uid))
+            user = CustomUser.objects.get(pk=user_id)
+        except (TypeError, ValueError, CustomUser.DoesNotExist):
+            return Response({'error': 'Link inválido o expirado.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if not default_token_generator.check_token(user, token):
+            return Response({'error': 'El link ya fue usado o expiró.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        user.set_password(password_nuevo)
+        user.primer_ingreso = False
+        user.save()
+
+        return Response({'ok': 'Contraseña restablecida correctamente. Ya podés ingresar.'})

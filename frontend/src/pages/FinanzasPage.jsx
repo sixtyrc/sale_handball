@@ -14,11 +14,13 @@ import {
     Calendar,
     ArrowUpRight,
     ArrowDownRight,
-    X
+    X,
+    Bell
 } from 'lucide-react';
 import CobroModal from '../modules/finanzas/CobroModal';
 import GeneradorCuotasModal from '../modules/finanzas/GeneradorCuotasModal';
 import MovimientosModal from '../modules/finanzas/MovimientosModal';
+import AvisosModal from '../modules/finanzas/AvisosModal';
 
 const FinanzasPage = () => {
     const [cuentas, setCuentas] = useState([]);
@@ -30,8 +32,10 @@ const FinanzasPage = () => {
     const [isCobroModalOpen, setIsCobroModalOpen] = useState(false);
     const [isCuotasModalOpen, setIsCuotasModalOpen] = useState(false);
     const [isMovimientosModalOpen, setIsMovimientosModalOpen] = useState(false);
+    const [isAvisosModalOpen, setIsAvisosModalOpen] = useState(false);
     const [selectedCuenta, setSelectedCuenta] = useState(null);
     const [initialCobroSocioId, setInitialCobroSocioId] = useState(null);
+    const [pendingAvisosCount, setPendingAvisosCount] = useState(0);
 
     useEffect(() => {
         const params = new URLSearchParams(window.location.search);
@@ -51,6 +55,14 @@ const FinanzasPage = () => {
             const cuentasData = resCuentas.data;
 
             setCuentas(cuentasData);
+            
+            // Check for pending avisos
+            try {
+                const resAvisos = await api.get('finanzas/avisos/?estado=PENDIENTE');
+                setPendingAvisosCount(resAvisos.data.length);
+            } catch (err) {
+                console.error("Error fetching pending avisos count", err);
+            }
             
             const deuda = cuentasData.reduce((acc, c) => c.saldo < 0 ? acc + Math.abs(parseFloat(c.saldo)) : acc, 0);
             const favor = cuentasData.reduce((acc, c) => c.saldo > 0 ? acc + parseFloat(c.saldo) : acc, 0);
@@ -139,6 +151,21 @@ const FinanzasPage = () => {
                         Gerar Cuotas
                     </button>
                     <button 
+                        onClick={() => setIsAvisosModalOpen(true)}
+                        className="relative flex-1 sm:flex-none flex items-center justify-center gap-2 bg-slate-900 hover:bg-slate-800 text-white px-5 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all border border-slate-800"
+                    >
+                        <Bell size={18} />
+                        Avisos
+                        {pendingAvisosCount > 0 && (
+                            <span className="absolute -top-1 -right-1 flex h-4 w-4">
+                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                                <span className="relative inline-flex rounded-full h-4 w-4 bg-red-500 items-center justify-center text-[10px] text-white">
+                                    {pendingAvisosCount}
+                                </span>
+                            </span>
+                        )}
+                    </button>
+                    <button 
                         onClick={() => { setInitialCobroSocioId(null); setIsCobroModalOpen(true); }}
                         className="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-6 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all shadow-xl shadow-blue-600/20 active:scale-95"
                     >
@@ -165,6 +192,11 @@ const FinanzasPage = () => {
                 isOpen={isMovimientosModalOpen}
                 onClose={() => { setIsMovimientosModalOpen(false); setSelectedCuenta(null); }}
                 cuenta={selectedCuenta}
+            />
+            <AvisosModal
+                isOpen={isAvisosModalOpen}
+                onClose={() => setIsAvisosModalOpen(false)}
+                onSuccess={fetchCuentas}
             />
 
             {/* Summary Cards */}

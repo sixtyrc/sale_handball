@@ -3,15 +3,28 @@ import Modal from '../../components/common/Modal';
 import { Save, Loader2, Info } from 'lucide-react';
 import api from '../../services/api';
 
-const CategoriaFormModal = ({ isOpen, onClose, onSuccess }) => {
+const CategoriaFormModal = ({ isOpen, onClose, onSuccess, category = null }) => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [formData, setFormData] = useState({
-        nombre: '',
-        genero: 'MASCULINO',
-        orden: 1,
-        descripcion: ''
+        nombre: category?.nombre || '',
+        genero: category?.genero || 'MASCULINO',
+        orden: category?.orden || 1,
+        descripcion: category?.descripcion || ''
     });
+
+    React.useEffect(() => {
+        if (category) {
+            setFormData({
+                nombre: category.nombre,
+                genero: category.genero,
+                orden: category.orden,
+                descripcion: category.descripcion
+            });
+        } else {
+            setFormData({ nombre: '', genero: 'MASCULINO', orden: 1, descripcion: '' });
+        }
+    }, [category, isOpen]);
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -23,10 +36,13 @@ const CategoriaFormModal = ({ isOpen, onClose, onSuccess }) => {
         setError(null);
 
         try {
-            await api.post('deportes/categorias/', formData);
+            if (category) {
+                await api.patch(`deportes/categorias/${category.id}/`, formData);
+            } else {
+                await api.post('deportes/categorias/', formData);
+            }
             onSuccess();
             onClose();
-            setFormData({ nombre: '', genero: 'MASCULINO', orden: 1, descripcion: '' });
         } catch (err) {
             setError(err.response?.data?.error || 'Error al guardar la categoría. Verifique los datos.');
         } finally {

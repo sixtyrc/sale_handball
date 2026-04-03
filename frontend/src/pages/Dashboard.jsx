@@ -32,18 +32,21 @@ const Dashboard = () => {
 
     const fetchDashboardData = async () => {
         try {
-            // En un caso real, esto sería un solo endpoint /api/v1/dashboard/
-            const [socios, {data: categorias}] = await Promise.all([
+            const [sociosRes, catRes] = await Promise.all([
                 api.get('socios/'),
                 api.get('deportes/categorias/')
             ]);
             
-            const activos = socios.data.filter(s => s.estado === 'ACTIVO').length;
+            const socios = sociosRes.data || [];
+            const categorias = catRes.data || [];
+            
+            const activos = socios.filter(s => s.estado === 'ACTIVO').length;
+            const activas = categorias.filter(c => c.activo).length;
             
             setStats({
                 sociosActivos: activos,
-                moraTotal: 125430, // Mock for now
-                categoriasHabilitadas: categorias.length,
+                moraTotal: 125430, // Mock
+                categoriasHabilitadas: activas,
                 partidosProximos: 4,
                 riesgoOperativo: 3
             });
@@ -56,7 +59,7 @@ const Dashboard = () => {
 
     const { user } = useAuthStore();
 
-    const isProfesor = user?.rol === 'PROFESOR';
+    const isProfesor = user?.role === 'PROFESOR';
 
     const fastActions = isProfesor ? [
         { label: 'Ver Mis Jugadores', icon: Users, to: '/deportes', color: 'bg-emerald-600' },
