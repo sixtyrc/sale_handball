@@ -28,6 +28,9 @@ class Jornada(models.Model):
     def save(self, *args, **kwargs):
         if not self.slug:
             self.slug = uuid.uuid4().hex[:12]
+        if not self.access_pin:
+            import random
+            self.access_pin = f"{random.randint(1000, 9999)}"
         super().save(*args, **kwargs)
 
     def __str__(self):
@@ -59,6 +62,30 @@ class Voluntario(models.Model):
 
     def __str__(self):
         return f"{self.persona} en {self.get_tarea_display()} ({self.jornada.titulo})"
+
+class AsistenciaVoluntario(models.Model):
+    """
+    Log real de presencia (check-in / check-out).
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    jornada = models.ForeignKey(Jornada, on_delete=models.CASCADE, related_name='asistencias')
+    
+    # Datos declarados por quien ingresa
+    nombre_declarado = models.CharField(max_length=150)
+    dni_declarado = models.CharField(max_length=20)
+    
+    # Vínculo automático si el DNI pertenece a un socio del club
+    socio = models.ForeignKey(Socio, on_delete=models.SET_NULL, null=True, blank=True, related_name='asistencias_eventos')
+    
+    tarea = models.CharField(max_length=50, choices=Voluntario.TAREA_CHOICES)
+    hora_entrada = models.DateTimeField(auto_now_add=True)
+    hora_salida = models.DateTimeField(null=True, blank=True)
+    
+    puntos_asignados = models.PositiveIntegerField(default=10, help_text="Puntos base por turno cumplido.")
+
+    def __str__(self):
+        return f"Asistencia: {self.nombre_declarado} ({self.jornada.fecha})"
+
 
 class DonacionCantina(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -96,6 +123,26 @@ class VentaJornada(models.Model):
     def __str__(self):
         return f"Venta {self.tipo}: ${self.monto}"
 
+class EgresoJornada(models.Model):
+    TIPO_EGRESO = (
+        ('SUMINISTROS', 'Suministros / Buffet'),
+        ('VIATICOS', 'Viáticos'),
+        ('LIMPIEZA', 'Limpieza'),
+        ('OTRO', 'Otros'),
+    )
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    jornada = models.ForeignKey(Jornada, on_delete=models.CASCADE, related_name='egresos')
+    
+    monto = models.DecimalField(max_digits=10, decimal_places=2)
+    tipo = models.CharField(max_length=30, choices=TIPO_EGRESO, default='OTRO')
+    descripcion = models.CharField(max_length=255, help_text="Ej: Compra de 2 bolsas de hielo")
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Egreso {self.tipo}: ${self.monto} - {self.descripcion}"
+
 class CajaJornada(models.Model):
     """
     Rendición del evento. No es la contabilidad general del club, 
@@ -103,7 +150,7 @@ class CajaJornada(models.Model):
     """
     jornada = models.OneToOneField(Jornada, on_delete=models.CASCADE, primary_key=True, related_name='balance_caja')
     
-    # Egresos locales (lo que el club paga en el momento)
+    # Estos quedarán como resumen, se pueden autocalcular de EgresoJornada
     egreso_arbitros = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal('0.00'))
     egreso_viaticos = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal('0.00'))
     otros_egresos = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal('0.00'))
@@ -124,15 +171,17 @@ class CajaJornada(models.Model):
         total_efectivo = ventas.filter(metodo_pago='EFECTIVO').aggregate(models.Sum('monto'))['monto__sum'] or Decimal('0.00')
         total_digital = ventas.filter(metodo_pago__in=['TRANSFERENCIA', 'QR']).aggregate(models.Sum('monto'))['monto__sum'] or Decimal('0.00')
         
-        egresos = self.egreso_arbitros + self.egreso_viaticos + self.otros_egresos
-        sobrante_esperado = total_efectivo - egresos
+        # Egregos dinámicos desde el modelo nuevo
+        total_egresos = self.jornada.egresos.aggregate(models.Sum('monto'))['monto__sum'] or Decimal('0.00')
+        
+        sobrante_esperado = total_efectivo - total_egresos
         
         return {
             'total_entradas': total_entradas,
             'total_cantina': total_cantina,
             'total_efectivo': total_efectivo,
             'total_digital': total_digital,
-            'egresos_totales': egresos,
+            'egresos_totales': total_egresos, # Nuevo resumen dinámico
             'sobrante_efectivo_esperado': sobrante_esperado,
             'diferencia_arqueo': self.efectivo_declarado - sobrante_esperado
         }

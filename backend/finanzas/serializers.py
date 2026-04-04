@@ -14,7 +14,7 @@ class AvisoPagoSerializer(serializers.ModelSerializer):
             'descripcion', 'comprobante', 'estado', 'estado_display',
             'observacion_rechazo', 'movimiento_generado', 'created_at'
         ]
-        read_only_fields = ['id', 'estado', 'movimiento_generado', 'created_at']
+        read_only_fields = ['id', 'socio', 'estado', 'movimiento_generado', 'created_at']
 
     def get_socio_nombre(self, obj):
         return f"{obj.socio.apellidos}, {obj.socio.nombres}"

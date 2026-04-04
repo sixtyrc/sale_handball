@@ -1,5 +1,7 @@
 from decimal import Decimal
 from django.db import transaction
+from django.db.models import Sum, Q, Value, DecimalField
+from django.db.models.functions import Coalesce
 from django.utils import timezone
 from rest_framework import status
 from rest_framework.response import Response
@@ -26,10 +28,14 @@ class IsAdminOrProfesorRole(IsAuthenticated):
 
 
 class CuentaCorrienteView(APIView):
-    """GET /api/v1/finanzas/socios/{socio_id}/cuenta/ → Saldo + historial de movimientos."""
+    """GET /api/v1/finanzas/socios/{socio_id}/cuenta/ → Saldo + historial de movimientos.
+    Soporta filtro por ?anio=2026
+    """
     permission_classes = [IsAuthenticated]
 
     def get(self, request, socio_id):
+        anio = request.query_params.get('anio', None)
+        
         try:
             cuenta = CuentaCorriente.objects.get(
                 socio__id=socio_id,
@@ -38,23 +44,78 @@ class CuentaCorrienteView(APIView):
         except CuentaCorriente.DoesNotExist:
             return Response({'error': 'Cuenta no encontrada'}, status=status.HTTP_404_NOT_FOUND)
 
-        serializer = CuentaCorrienteSerializer(cuenta)
-        return Response(serializer.data)
+        # Filtramos los movimientos según el año si se especifica
+        movimientos = cuenta.movimientos.all()
+        if anio and anio != 'ALL':
+            movimientos = movimientos.filter(fecha__year=anio)
 
+        # Usamos el serializer pero limitando los movimientos si hubo filtro
+        serializer = CuentaCorrienteSerializer(cuenta)
+        data = serializer.data
+        
+        # Sobrescribimos movimientos con los filtrados (ya serializados)
+        mov_serializer = MovimientoFinancieroSerializer(movimientos, many=True)
+        data['movimientos'] = mov_serializer.data
+
+        # El saldo en el detalle SIEMPRE debe ser el saldo calculado REAL (acumulado)
+        # para que el admin sepa cuánto debe en total, independientemente del filtro visual.
+        data['saldo_periodo'] = movimientos.aggregate(total=Sum('monto'))['total'] or 0
+        
+        return Response(data)
+
+
+from rest_framework.pagination import PageNumberPagination
+
+class FinanzasPagination(PageNumberPagination):
+    page_size = 10
+    page_size_query_param = 'page_size'
+    max_page_size = 100
 
 class CuentaCorrienteListView(APIView):
-    """GET /api/v1/finanzas/cuentas/ → Lista todas las cuentas del club con su saldo optimizado."""
+    """GET /api/v1/finanzas/cuentas/ → Lista todas las cuentas del club con su saldo optimizado.
+    Soporta filtros por ?anio=2026 y paginación.
+    """
     permission_classes = [IsAuthenticated]
     
     def get(self, request):
-        socios = Socio.objects.filter(club=request.user.club)
+        anio = request.query_params.get('anio', None)
+        search = request.query_params.get('search', '')
         
-        # En vez de 500 queries, traemos todos los movimientos relevantes
-        # Para acelerar drásticamente la carga
-        cuentas = CuentaCorriente.objects.filter(socio__in=socios).select_related('socio')
+        # Filtramos solo socios que NO son profesores (Cuerpo Técnico)
+        socios_qs = Socio.objects.filter(club=request.user.club, es_profesor=False)
+        
+        if search:
+            socios_qs = socios_qs.filter(
+                Q(nombres__icontains=search) | 
+                Q(apellidos__icontains=search) | 
+                Q(dni__icontains=search) |
+                Q(nro_socio__icontains=search)
+            )
+
+        # Filtro opcional por año para el cálculo del saldo
+        saldo_filter = Q()
+        if anio and anio != 'ALL':
+            saldo_filter &= Q(movimientos__fecha__year=anio)
+            
+        cuentas_qs = CuentaCorriente.objects.filter(socio__in=socios_qs).select_related('socio').annotate(
+            saldo_calculado=Coalesce(
+                Sum('movimientos__monto', filter=saldo_filter),
+                Value(0),
+                output_field=DecimalField()
+            )
+        ).order_by('socio__apellidos', 'socio__nombres')
+
+        # Totales globales (para las tarjetas superiores basándose en el filtro de año)
+        # Esto nos permite saber la situación del club en ese periodo específico
+        total_deuda = cuentas_qs.filter(saldo_calculado__lt=0).aggregate(total=Sum('saldo_calculado'))['total'] or 0
+        total_favor = cuentas_qs.filter(saldo_calculado__gt=0).aggregate(total=Sum('saldo_calculado'))['total'] or 0
+
+        # Paginación
+        paginator = FinanzasPagination()
+        page = paginator.paginate_queryset(cuentas_qs, request)
         
         data = []
-        for cuenta in cuentas:
+        for cuenta in (page if page is not None else cuentas_qs):
             data.append({
                 'id': cuenta.id,
                 'socio': {
@@ -63,12 +124,30 @@ class CuentaCorrienteListView(APIView):
                     'apellidos': cuenta.socio.apellidos,
                     'dni': cuenta.socio.dni,
                     'nro_socio': cuenta.socio.nro_socio,
+                    'es_profesor': cuenta.socio.es_profesor,
                 },
-                'saldo': cuenta.saldo,
+                'saldo': cuenta.saldo_calculado,
                 'created_at': cuenta.created_at
             })
             
-        return Response(data)
+        if page is not None:
+            res = paginator.get_paginated_response(data)
+            # Inyectamos los totales de resumen en la respuesta paginada para que el frontend los actualice
+            res.data['summary'] = {
+                'totalDeuda': float(abs(total_deuda)),
+                'totalFavor': float(total_favor),
+                'balanceNeto': float(total_deuda + total_favor)
+            }
+            return res
+            
+        return Response({
+            'results': data,
+            'summary': {
+                'totalDeuda': float(abs(total_deuda)),
+                'totalFavor': float(total_favor),
+                'balanceNeto': float(total_deuda + total_favor)
+            }
+        })
 
 
 class RegistrarMovimientoView(APIView):
@@ -119,7 +198,7 @@ class GenerarCuotasMasivasView(APIView):
         anio = fecha.year
 
         socios_activos = Socio.objects.filter(
-            club=request.user.club, estado='ACTIVO'
+            club=request.user.club, estado='ACTIVO', es_profesor=False
         ).select_related('grupo_familiar__club__configuracion')
 
         movimientos_creados = 0
@@ -439,11 +518,10 @@ class AvisoPagoSocioView(APIView):
         except Exception:
             return Response({'error': 'No tenés un perfil de socio vinculado.'}, status=status.HTTP_403_FORBIDDEN)
 
-        data = request.data.copy()
-        data['socio'] = socio.id
-
-        serializer = AvisoPagoSerializer(data=data)
+        # Usar los datos directamente del request para evitar errores de pickling con archivos
+        serializer = AvisoPagoSerializer(data=request.data)
         if serializer.is_valid():
+            # Pasamos el socio explícitamente en el save
             serializer.save(socio=socio, estado='PENDIENTE')
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

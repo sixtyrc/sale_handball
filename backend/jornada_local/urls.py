@@ -4,13 +4,15 @@ from .views import (
     JornadaViewSet, 
     VoluntarioViewSet, 
     DonacionCantinaViewSet,
-    KioscoViewSet
+    KioscoViewSet,
+    EgresoJornadaViewSet
 )
 
 router = DefaultRouter()
 router.register(r'jornadas', JornadaViewSet, basename='jornada')
 router.register(r'voluntarios', VoluntarioViewSet, basename='voluntario')
 router.register(r'donaciones', DonacionCantinaViewSet, basename='donacion')
+router.register(r'egresos', EgresoJornadaViewSet, basename='egreso')
 router.register(r'kiosco', KioscoViewSet, basename='kiosco')
 
 urlpatterns = [

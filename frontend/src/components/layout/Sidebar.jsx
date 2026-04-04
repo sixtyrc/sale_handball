@@ -10,6 +10,7 @@ import {
     Store,
     Calendar,
     FileText,
+    ShieldCheck,
     X
 } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
@@ -32,11 +33,13 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
     const allNavItems = [
         { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard', roles: ['ADMIN', 'PROFESOR', 'SOCIO_TUTOR', 'DIRIGENTE'] },
         { to: '/socios', icon: Users, label: 'Socios', roles: ['ADMIN', 'DIRIGENTE'] },
+        { to: '/staff', icon: ShieldCheck, label: 'Staff Técnico', roles: ['ADMIN', 'DIRIGENTE'] },
         { to: '/finanzas', icon: CreditCard, label: 'Finanzas', roles: ['ADMIN', 'DIRIGENTE'] },
-        { to: '/deportes', icon: Trophy, label: 'Deportes', roles: ['ADMIN', 'PROFESOR', 'DIRIGENTE'] },
-        { to: '/locales', icon: Store, label: 'Locales', roles: ['ADMIN', 'DIRIGENTE'] },
-        { to: '/eventos', icon: Calendar, label: 'Eventos', roles: ['ADMIN', 'PROFESOR', 'DIRIGENTE'] },
+        { to: '/deportes', icon: Trophy, label: 'Categorías', roles: ['ADMIN', 'PROFESOR', 'DIRIGENTE'] },
+        { to: '/eventos', icon: Calendar, label: 'Partidos', roles: ['ADMIN', 'PROFESOR', 'DIRIGENTE'] },
+        { to: '/locales', icon: Store, label: 'Somos Local', roles: ['ADMIN', 'DIRIGENTE'] },
         { to: '/config', icon: Settings, label: 'Configuración', roles: ['ADMIN'] },
+        { to: '/ayuda', icon: FileText, label: 'Manual & Ayuda', roles: ['ADMIN', 'PROFESOR', 'DIRIGENTE'] },
     ];
 
     // Filtrar items según el rol del usuario actual (insensible a mayúsculas)

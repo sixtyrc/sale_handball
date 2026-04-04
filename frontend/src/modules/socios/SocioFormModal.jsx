@@ -24,6 +24,7 @@ const SocioFormModal = ({ isOpen, onClose, onSuccess }) => {
         estado: 'ACTIVO',
         nro_socio: '',
         altura: '',
+        peso: '',
         mano_habil: 'DER',
         posicion_habitual: '',
         observaciones: '',
@@ -101,7 +102,7 @@ const SocioFormModal = ({ isOpen, onClose, onSuccess }) => {
                 dni: '', nombres: '', apellidos: '', fecha_nacimiento: '',
                 email_contacto: '', telefono: '', domicilio: '', sexo: '', grupo_sanguineo: '',
                 porcentaje_beca: 0, foto: null, estado: 'ACTIVO', nro_socio: '',
-                altura: '', mano_habil: 'DER', posicion_habitual: '', observaciones: '',
+                altura: '', peso: '', mano_habil: 'DER', posicion_habitual: '', observaciones: '',
                 nombre_tutor: '', dni_tutor: '', tel_tutor: '', parentesco_tutor: ''
             });
             onClose();
@@ -256,6 +257,14 @@ const SocioFormModal = ({ isOpen, onClose, onSuccess }) => {
                                 <option value="DER">Diestro</option>
                                 <option value="IZQ">Zurdo</option>
                             </select>
+                        </div>
+                        <div className="space-y-1.5">
+                            <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest pl-1">Altura (m / cm)</label>
+                            <input name="altura" value={formData.altura} onChange={handleChange} className="w-full px-5 py-4 bg-slate-950 border border-slate-800 rounded-2xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-mono" placeholder="Ej: 1.85" />
+                        </div>
+                        <div className="space-y-1.5">
+                            <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest pl-1">Peso (kg)</label>
+                            <input type="number" step="0.1" name="peso" value={formData.peso} onChange={handleChange} className="w-full px-5 py-4 bg-slate-950 border border-slate-800 rounded-2xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-mono" placeholder="Ej: 82.5" />
                         </div>
                         <div className="space-y-1.5 sm:col-span-2">
                             <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest pl-1">Observaciones / Notas Extras</label>

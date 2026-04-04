@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Modal from '../../components/common/Modal';
-import { Save, Loader2, Info, UserCog, MapPin } from 'lucide-react';
+import { Save, Loader2, Info, UserCog, MapPin, Trophy, Activity, AlertTriangle, ShieldAlert } from 'lucide-react';
 import api from '../../services/api';
 import { useUIStore } from '../../store/uiStore';
 
@@ -154,20 +154,31 @@ const SocioEditModal = ({ isOpen, onClose, onSuccess, socio }) => {
                 >
                     Personal
                 </button>
-                <button 
-                    type="button"
-                    onClick={() => setActiveTab('deportivo')}
-                    className={`flex-1 py-3 text-[10px] font-black uppercase tracking-[0.2em] rounded-xl transition-all ${activeTab === 'deportivo' ? 'bg-amber-600 text-white shadow-xl shadow-amber-600/30' : 'text-slate-500 hover:text-white'}`}
-                >
-                    Deportivo
-                </button>
-                <button 
-                    type="button"
-                    onClick={() => setActiveTab('tutor')}
-                    className={`flex-1 py-3 text-[10px] font-black uppercase tracking-[0.2em] rounded-xl transition-all ${activeTab === 'tutor' ? 'bg-amber-600 text-white shadow-xl shadow-amber-600/30' : 'text-slate-500 hover:text-white'}`}
-                >
-                    Tutor
-                </button>
+                {!socio?.es_profesor && (
+                    <>
+                        <button 
+                            type="button"
+                            onClick={() => setActiveTab('deportivo')}
+                            className={`flex-1 py-3 text-[10px] font-black uppercase tracking-[0.2em] rounded-xl transition-all ${activeTab === 'deportivo' ? 'bg-amber-600 text-white shadow-xl shadow-amber-600/30' : 'text-slate-500 hover:text-white'}`}
+                        >
+                            Deportivo
+                        </button>
+                        <button 
+                            type="button"
+                            onClick={() => setActiveTab('tutor')}
+                            className={`flex-1 py-3 text-[10px] font-black uppercase tracking-[0.2em] rounded-xl transition-all ${activeTab === 'tutor' ? 'bg-amber-600 text-white shadow-xl shadow-amber-600/30' : 'text-slate-500 hover:text-white'}`}
+                        >
+                            Tutor
+                        </button>
+                        <button 
+                            type="button"
+                            onClick={() => setActiveTab('estadisticas')}
+                            className={`flex-1 py-3 text-[10px] font-black uppercase tracking-[0.2em] rounded-xl transition-all ${activeTab === 'estadisticas' ? 'bg-amber-600 text-white shadow-xl shadow-amber-600/30' : 'text-slate-500 hover:text-white'}`}
+                        >
+                            Estadísticas
+                        </button>
+                    </>
+                )}
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-6 pb-20 sm:pb-0">
@@ -343,6 +354,63 @@ const SocioEditModal = ({ isOpen, onClose, onSuccess, socio }) => {
                         <div className="space-y-1.5 sm:col-span-2">
                             <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest pl-1">Parentesco</label>
                             <input name="parentesco_tutor" value={formData.parentesco_tutor} onChange={handleChange} className="w-full px-5 py-4 bg-slate-950 border border-slate-800 rounded-2xl text-white focus:outline-none focus:border-amber-500" placeholder="Padre, Madre, etc." />
+                        </div>
+                    </div>
+                )}
+
+                {activeTab === 'estadisticas' && (
+                    <div className="animate-in fade-in slide-in-from-right-8 duration-500 space-y-8">
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                            <div className="bg-slate-950/50 border border-slate-800 p-6 rounded-[28px] text-center space-y-2">
+                                <Trophy className="text-blue-500 mx-auto" size={24} />
+                                <p className="text-2xl font-black text-white">{socio?.sports_stats?.goles_totales || 0}</p>
+                                <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest leading-tight">Goles Históricos</p>
+                            </div>
+                            <div className="bg-slate-950/50 border border-slate-800 p-6 rounded-[28px] text-center space-y-2">
+                                <Activity className="text-emerald-500 mx-auto" size={24} />
+                                <p className="text-2xl font-black text-white">{socio?.sports_stats?.partidos_jugados || 0}</p>
+                                <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest leading-tight">Presencias</p>
+                            </div>
+                            <div className="bg-slate-950/50 border border-slate-800 p-6 rounded-[28px] text-center space-y-2">
+                                <AlertTriangle className="text-amber-500 mx-auto" size={24} />
+                                <p className="text-2xl font-black text-white">{socio?.sports_stats?.amarillas || 0}</p>
+                                <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest leading-tight">Tarjetas Amarillas</p>
+                            </div>
+                            <div className="bg-slate-950/50 border border-slate-800 p-6 rounded-[28px] text-center space-y-2 text-red-500">
+                                <ShieldAlert className="text-red-500 mx-auto" size={24} />
+                                <p className="text-2xl font-black text-white">{socio?.sports_stats?.rojas || 0}</p>
+                                <p className="text-[9px] font-black text-red-500/50 uppercase tracking-widest leading-tight italic">Rojas Directas</p>
+                            </div>
+                        </div>
+
+                        <div className="p-8 bg-blue-600/5 border border-blue-500/10 rounded-[32px] space-y-4">
+                            <div className="flex justify-between items-center">
+                                <h4 className="text-[10px] font-black text-blue-400 uppercase tracking-[0.2em]">Resumen de Disciplina</h4>
+                                <span className="text-[9px] font-bold text-slate-500 italic">Datos consolidados de planillas cerradas</span>
+                            </div>
+                            <div className="space-y-6">
+                                <div className="flex items-center justify-between p-4 bg-slate-900/50 rounded-2xl border border-slate-800">
+                                    <div className="flex items-center gap-4">
+                                        <div className="w-2 h-8 bg-emerald-500 rounded-full" />
+                                        <div>
+                                            <p className="text-sm font-black text-white">Exclusiones de 2 Minutos</p>
+                                            <p className="text-[10px] text-slate-500 font-bold italic">Promedio: {socio?.sports_stats?.partidos_jugados > 0 ? (socio.sports_stats.suspensiones_2min / socio.sports_stats.partidos_jugados).toFixed(2) : 0} por partido</p>
+                                        </div>
+                                    </div>
+                                    <span className="text-2xl font-black text-white">{socio?.sports_stats?.suspensiones_2min || 0}</span>
+                                </div>
+
+                                <div className="flex items-center justify-between p-4 bg-slate-900/50 rounded-2xl border border-slate-800">
+                                    <div className="flex items-center gap-4">
+                                        <div className="w-2 h-8 bg-blue-600 rounded-full" />
+                                        <div>
+                                            <p className="text-sm font-black text-white">Tarjetas Azules</p>
+                                            <p className="text-[10px] text-slate-500 font-bold italic">Informes arbitrales técnicos</p>
+                                        </div>
+                                    </div>
+                                    <span className="text-2xl font-black text-white">{socio?.sports_stats?.azules || 0}</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 )}

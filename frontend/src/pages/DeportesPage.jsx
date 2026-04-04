@@ -90,8 +90,8 @@ const DeportesPage = () => {
         <MainLayout>
             <div className="flex justify-between items-end mb-10">
                 <div>
-                    <h2 className="text-4xl font-extrabold text-white tracking-tight mb-2">Deportes</h2>
-                    <p className="text-slate-400">Categorías, perfiles deportivos y elegibilidad</p>
+                    <h2 className="text-4xl font-extrabold text-white tracking-tight mb-2">Categorías</h2>
+                    <p className="text-slate-400">Gestión de planteles, perfiles deportivos y elegibilidad</p>
                 </div>
                 
                 <div className="flex gap-3">
@@ -236,8 +236,19 @@ const DeportesPage = () => {
                                             </span>
                                         </div>
                                         <h3 className="text-3xl font-black text-white mb-2">{currentCategory?.nombre}</h3>
-                                        <p className="text-slate-400 font-light text-sm italic">{currentCategory?.descripcion || 'Sin descripción para esta categoría'}</p>
+                                        <p className="text-slate-400 font-light text-sm italic mb-4">{currentCategory?.descripcion || 'Sin descripción para esta categoría'}</p>
                                         
+                                        {currentCategory?.profesores_nombres?.length > 0 && (
+                                            <div className="flex flex-wrap gap-2 mb-4">
+                                                {currentCategory.profesores_nombres.map((name, i) => (
+                                                    <div key={i} className="flex items-center gap-1.5 bg-amber-500/10 border border-amber-500/20 text-amber-500 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest">
+                                                        <ShieldCheck size={12} />
+                                                        {name}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+
                                         {(user?.role === 'ADMIN' || user?.role === 'DIRIGENTE') && (
                                             <button 
                                                 onClick={() => setIsAsignarProfeOpen(true)}
@@ -256,11 +267,15 @@ const DeportesPage = () => {
                                         </div>
                                         <div className="text-center">
                                             <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Habilitados</p>
-                                            <p className="text-2xl font-black text-emerald-500">{filteredAthletes.filter(a => a.puede_jugar).length}</p>
+                                            <p className="text-2xl font-black text-emerald-500">
+                                                {filteredAthletes.filter(a => a.eligibility?.habilitado).length}
+                                            </p>
                                         </div>
                                         <div className="text-center">
                                             <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Riesgo</p>
-                                            <p className="text-2xl font-black text-red-500">{filteredAthletes.filter(a => !a.puede_jugar).length}</p>
+                                            <p className="text-2xl font-black text-red-500">
+                                                {filteredAthletes.filter(a => !a.eligibility?.habilitado).length}
+                                            </p>
                                         </div>
                                     </div>
                                 </div>

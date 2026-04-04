@@ -83,9 +83,12 @@ class PerfilDeportivoViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        base_qs = PerfilDeportivo.objects.filter(socio__club=user.club)
+        # Optimización (N+1): Pre-traemos socio, categoría y los stats en un solo flujo eficiente
+        base_qs = PerfilDeportivo.objects.filter(socio__club=user.club)\
+            .select_related('socio', 'categoria_actual')\
+            .prefetch_related('socio__documentos')
         
-        # Si es profesor, limitamos a sus categorías asignadas (ramas)
+        # Filtro de visibilidad por rol
         if user.role == 'PROFESOR':
             categorias_asignadas = user.asignaciones_categorias.values_list('categoria_id', flat=True)
             return base_qs.filter(categoria_actual_id__in=categorias_asignadas)
@@ -96,7 +99,17 @@ class PerfilDeportivoViewSet(viewsets.ModelViewSet):
         socio_data = self.request.data.get('socio')
         socio_id = socio_data.get('id') if isinstance(socio_data, dict) else socio_data
         socio = get_object_or_404(Socio, id=socio_id, club=self.request.user.club)
-        serializer.save(socio=socio)
+        
+        # Evitar duplicados: usamos update_or_create para que si ya existe, lo mueva de categoría en vez de fallar
+        perfil, created = PerfilDeportivo.objects.update_or_create(
+            socio=socio,
+            defaults={
+                'categoria_actual': serializer.validated_data.get('categoria_actual'),
+                'habilitado_federacion': serializer.validated_data.get('habilitado_federacion', True)
+            }
+        )
+        # Sincronizamos el serializer con el objeto creado/actualizado
+        serializer.instance = perfil
 
 class DocumentoDigitalViewSet(viewsets.ModelViewSet):
     serializer_class = DocumentoDigitalSerializer

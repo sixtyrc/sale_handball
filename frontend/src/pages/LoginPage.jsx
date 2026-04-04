@@ -16,7 +16,8 @@ const LoginPage = () => {
 
   useEffect(() => {
     if (!branding) {
-      fetchBranding('salesianos');
+      const hostname = window.location.hostname;
+      fetchBranding(hostname); 
     }
   }, []);
 
@@ -28,6 +29,22 @@ const LoginPage = () => {
     try {
       const result = await login(username, password);
       if (result.success) {
+        const { user, token, primer_ingreso } = result;
+
+        // 1. Si es SOCIO, lo mandamos su portal (y usamos sessionStorage para aislar del admin)
+        if (user.role === 'SOCIO') {
+          sessionStorage.setItem('socio_token', token);
+          sessionStorage.setItem('socio_user', JSON.stringify(user));
+          
+          if (primer_ingreso) {
+            navigate('/socio/cambiar-clave');
+          } else {
+            navigate('/socio/dashboard');
+          }
+          return;
+        }
+
+        // 2. Si es STAFF/PROFE/ADMIN, va al dashboard pro (authStore ya guardó en localStorage)
         navigate('/dashboard');
       } else {
         setError(result.error);

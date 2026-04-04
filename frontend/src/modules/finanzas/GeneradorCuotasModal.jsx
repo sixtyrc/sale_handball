@@ -146,12 +146,13 @@ const GeneradorCuotasModal = ({ isOpen, onClose, onSuccess, socios }) => {
                         >
                             <option value="ALL">Aplicar Masivamente a TODOS los socios activos</option>
                             <optgroup label="Socio Específico">
-                                {socios.map(socio => (
+                                {socios.filter(s => !s.es_profesor).map(socio => (
                                     <option key={socio.id} value={socio.id}>
                                         {socio.apellidos}, {socio.nombres} - DNI: {socio.dni}
                                     </option>
                                 ))}
                             </optgroup>
+
                         </select>
                     </div>
 

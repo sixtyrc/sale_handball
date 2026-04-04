@@ -18,7 +18,7 @@ import CargarSeguroModal from './CargarSeguroModal';
 const AthleteCard = ({ athlete }) => {
     const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
     const [isSeguroModalOpen, setIsSeguroModalOpen] = useState(false);
-    const { eligibility, socio_detalle, categoria_nombre } = athlete;
+    const { eligibility, socio_detalle, categoria_nombre, stats_acumuladas } = athlete;
     const { habilitado, warnings } = eligibility;
 
     const getWarningIcon = (tipo) => {
@@ -33,6 +33,30 @@ const AthleteCard = ({ athlete }) => {
     const hasMedicalWarning = warnings.some(w => w.tipo === 'MEDICO');
     const hasSeguroWarning = warnings.some(w => w.tipo === 'ADMINISTRATIVO');
     const financialWarning = warnings.find(w => w.tipo === 'MOROSIDAD');
+
+    const renderStats = () => {
+        if (!stats_acumuladas) return null;
+        return (
+            <div className="grid grid-cols-4 gap-2 mt-6">
+                <div className="bg-slate-950/50 rounded-xl border border-slate-800 p-3 flex flex-col items-center justify-center">
+                    <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">P.J.</span>
+                    <span className="text-xl font-black text-white">{stats_acumuladas.partidos_jugados || 0}</span>
+                </div>
+                <div className="bg-blue-900/10 rounded-xl border border-blue-500/20 p-3 flex flex-col items-center justify-center">
+                    <span className="text-[10px] font-black text-blue-500 uppercase tracking-widest mb-1">Goles</span>
+                    <span className="text-xl font-black text-blue-400">{stats_acumuladas.goles_totales || 0}</span>
+                </div>
+                <div className="bg-amber-900/10 rounded-xl border border-amber-500/20 p-3 flex flex-col items-center justify-center">
+                    <span className="text-[10px] font-black text-amber-500 uppercase tracking-widest mb-1">2 Min</span>
+                    <span className="text-xl font-black text-amber-400">{stats_acumuladas.suspensiones_2min || 0}</span>
+                </div>
+                <div className="bg-red-900/10 rounded-xl border border-red-500/20 p-3 flex flex-col items-center justify-center">
+                    <span className="text-[10px] font-black text-red-500 uppercase tracking-widest mb-1">Rojas</span>
+                    <span className="text-xl font-black text-red-400">{stats_acumuladas.tarjetas_rojas || 0}</span>
+                </div>
+            </div>
+        );
+    };
 
     return (
         <div className={`group bg-slate-900/40 backdrop-blur-md rounded-[2.5rem] border transition-all duration-500 hover:-translate-y-1 hover:shadow-2xl overflow-hidden ${
@@ -85,6 +109,9 @@ const AthleteCard = ({ athlete }) => {
                         {categoria_nombre}
                     </div>
                 </div>
+
+                {/* Performance Stats */}
+                {renderStats()}
 
                 {/* Dynamic Warnings Section */}
                 <div className="mt-8 space-y-4">

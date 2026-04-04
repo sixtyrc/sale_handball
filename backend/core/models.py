@@ -163,34 +163,14 @@ class Socio(models.Model):
         related_name='socios',
         help_text="Grupo familiar al que pertenece. Permite calcular descuentos por hermanos."
     )
+    
+    es_profesor = models.BooleanField(default=False, help_text="Marcar para crear usuario Profesor y asignar como Cuerpo Técnico")
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         unique_together = ('club', 'nro_socio')
-
-    def save(self, *args, **kwargs):
-        super().save(*args, **kwargs)
-        
-        # Automatización de Categorización por Edad (Reglas CAH)
-        try:
-            from deportes.models import PerfilDeportivo, Categoria
-            perfil, _ = PerfilDeportivo.objects.get_or_create(socio=self)
-            
-            if self.fecha_nacimiento:
-                # Determinar categoría por año de nacimiento
-                # current_year - birth_year
-                categoria_auto = Categoria.get_category_by_age(
-                    birth_year=self.fecha_nacimiento.year,
-                    gender=self.sexo if self.sexo in ['MASCULINO', 'FEMENINO'] else 'MIXTO',
-                    club=self.club
-                )
-                if categoria_auto:
-                    perfil.categoria_actual = categoria_auto
-                    perfil.save()
-        except Exception as e:
-            print(f"Error en categorización automática: {e}")
 
     def __str__(self):
         return f"{self.apellidos}, {self.nombres} - [{self.nro_socio}]"
@@ -256,6 +236,29 @@ class Socio(models.Model):
                 print(f"Error procesando imagen: {e}")
         
         super().save(*args, **kwargs)
+        
+        # Automatización de Categorización por Edad (Reglas CAH)
+        try:
+            from deportes.models import PerfilDeportivo, Categoria
+            perfil, _ = PerfilDeportivo.objects.get_or_create(socio=self)
+            
+            if self.fecha_nacimiento:
+                # Determinar categoría por año de nacimiento
+                categoria_auto = Categoria.get_category_by_age(
+                    birth_year=self.fecha_nacimiento.year,
+                    gender=self.sexo if self.sexo in ['MASCULINO', 'FEMENINO'] else 'MIXTO',
+                    club=self.club
+                )
+                if categoria_auto:
+                    perfil.categoria_actual = categoria_auto
+                    perfil.save()
+            
+            # Auto-asignación de perfil Entrenador si aplica
+            if self.es_profesor and not perfil.posicion_principal:
+                perfil.posicion_principal = 'ENTRENADOR'
+                perfil.save()
+        except Exception as e:
+            print(f"Error en categorización automática: {e}")
 
     @property
     def is_becado(self):

@@ -34,14 +34,15 @@ class Categoria(models.Model):
         current_year = date.today().year
         age = current_year - birth_year
         
-        # Mapeo de categorías estándar CAH
-        target_name = "Primera"
-        if age <= 8: target_name = "Mini" # Promocional
-        elif age <= 10: target_name = "Infantiles"
-        elif age <= 12: target_name = "Menores"
-        elif age <= 14: target_name = "Cadetes"
-        elif age <= 16: target_name = "Juveniles"
-        elif age <= 18: target_name = "Juniors"
+        # Mapeo de categorías estándar CAH (según año calendario)
+        target_name = "Mayores"
+        if age <= 10: target_name = "Infantiles" # Incluye Minis si el club no tiene
+        if age <= 8: target_name = "Mini"
+        elif age <= 12: target_name = "Infantiles"
+        elif age <= 14: target_name = "Menores"
+        elif age <= 16: target_name = "Cadetes"
+        elif age <= 18: target_name = "Juveniles"
+        elif age <= 21: target_name = "Juniors"
         else: target_name = "Mayores"
 
         # Buscamos la categoría en el club que coincida con el nombre y género

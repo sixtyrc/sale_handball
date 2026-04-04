@@ -3,9 +3,10 @@ import Modal from '../../components/common/Modal';
 import { CreditCard, TrendingDown, TrendingUp, Calendar, FileDown, Loader2 } from 'lucide-react';
 import api from '../../services/api';
 
-const MovimientosModal = ({ isOpen, onClose, cuenta }) => {
+const MovimientosModal = ({ isOpen, onClose, cuenta, selectedYear = 'ALL' }) => {
     const [movimientosList, setMovimientosList] = useState([]);
     const [cargando, setCargando] = useState(false);
+    const [saldoPeriodo, setSaldoPeriodo] = useState(0);
 
     useEffect(() => {
         if (isOpen && cuenta) {
@@ -13,14 +14,17 @@ const MovimientosModal = ({ isOpen, onClose, cuenta }) => {
         } else {
             setMovimientosList([]);
         }
-    }, [isOpen, cuenta]);
+    }, [isOpen, cuenta, selectedYear]);
 
     const fetchMovimientos = async () => {
         setCargando(true);
         try {
-            // Buscamos el detalle completo de la cuenta, que incluye los movimientos serializados
-            const res = await api.get(`finanzas/socios/${cuenta.socio.id}/cuenta/`);
+            // Buscamos el detalle completo de la cuenta, pasando el año para filtrar movimientos
+            const res = await api.get(`finanzas/socios/${cuenta.socio.id}/cuenta/`, {
+                params: { anio: selectedYear }
+            });
             setMovimientosList(res.data.movimientos || []);
+            setSaldoPeriodo(res.data.saldo_periodo || 0);
         } catch (error) {
             console.error('Error fetching movimientos al abrir modal:', error);
         } finally {
@@ -63,13 +67,23 @@ const MovimientosModal = ({ isOpen, onClose, cuenta }) => {
                             <p className="text-xs text-slate-500 font-mono">DNI: {socio.dni}</p>
                         </div>
                     </div>
-                    <div className="text-right">
-                        <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Saldo Actual</p>
-                        <p className={`font-black tracking-tight text-xl ${parseFloat(saldo) < 0 ? 'text-red-400' : parseFloat(saldo) > 0 ? 'text-emerald-400' : 'text-slate-500'}`}>
-                            $ {Math.abs(parseFloat(saldo)).toLocaleString('es-AR')}
-                            {parseFloat(saldo) < 0 && <TrendingDown size={16} className="inline ml-1" />}
-                            {parseFloat(saldo) > 0 && <TrendingUp size={16} className="inline ml-1" />}
-                        </p>
+                    <div className="text-right flex items-center gap-6">
+                        {selectedYear !== 'ALL' && (
+                             <div className="text-right border-r border-slate-800 pr-6">
+                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Cierre {selectedYear}</p>
+                                <p className={`font-bold text-lg ${parseFloat(saldoPeriodo) < 0 ? 'text-red-400' : parseFloat(saldoPeriodo) > 0 ? 'text-emerald-400' : 'text-slate-500'}`}>
+                                    $ {Math.abs(parseFloat(saldoPeriodo)).toLocaleString('es-AR')}
+                                </p>
+                            </div>
+                        )}
+                        <div>
+                            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Saldo Total</p>
+                            <p className={`font-black tracking-tight text-xl ${parseFloat(saldo) < 0 ? 'text-red-400' : parseFloat(saldo) > 0 ? 'text-emerald-400' : 'text-slate-500'}`}>
+                                $ {Math.abs(parseFloat(saldo)).toLocaleString('es-AR')}
+                                {parseFloat(saldo) < 0 && <TrendingDown size={16} className="inline ml-1" />}
+                                {parseFloat(saldo) > 0 && <TrendingUp size={16} className="inline ml-1" />}
+                            </p>
+                        </div>
                     </div>
                 </div>
 

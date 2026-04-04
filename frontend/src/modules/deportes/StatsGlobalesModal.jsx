@@ -6,7 +6,7 @@ const StatsGlobalesModal = ({ isOpen, onClose, categorias, athletes }) => {
 
     // Calcular estadísticas globales
     const totalAthletes = athletes.length;
-    const habilitados = athletes.filter(a => a.puede_jugar).length;
+    const habilitados = athletes.filter(a => a.eligibility?.habilitado).length;
     const enRiesgo = totalAthletes - habilitados;
     
     // Distribución por Género

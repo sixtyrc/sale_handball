@@ -7,6 +7,7 @@ import {
     ChevronRight, Trophy, Filter, ListFilter, Search 
 } from 'lucide-react';
 import EventoFormModal from '../modules/deportes/EventoFormModal';
+import PlanillaCargaModal from '../modules/deportes/PlanillaCargaModal';
 import { useNavigate } from 'react-router-dom';
 
 const EventosPage = () => {
@@ -20,6 +21,8 @@ const EventosPage = () => {
     
     // UI states
     const [isEventoModalOpen, setIsEventoModalOpen] = useState(false);
+    const [isPlanillaModalOpen, setIsPlanillaModalOpen] = useState(false);
+    const [selectedEventoId, setSelectedEventoId] = useState(null);
     
     // Filter states
     const [filterCategory, setFilterCategory] = useState('ALL');
@@ -83,7 +86,7 @@ const EventosPage = () => {
             {/* ENCABEZADO */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-10 gap-6">
                 <div>
-                    <h2 className="text-4xl font-black text-white tracking-tight mb-2">Eventos y Partidos</h2>
+                    <h2 className="text-4xl font-black text-white tracking-tight mb-2">Partidos</h2>
                     <p className="text-slate-400 font-medium">Fixture, entrenamientos y carga de planillas dinámicas</p>
                 </div>
                 <button 
@@ -91,7 +94,7 @@ const EventosPage = () => {
                     className="flex items-center gap-3 bg-blue-600 hover:bg-blue-500 text-white px-8 py-4 rounded-2xl font-black transition-all shadow-xl shadow-blue-600/20 active:scale-95"
                 >
                     <Plus size={20} />
-                    Agendar Partido / Evento
+                    Agendar nuevo Partido
                 </button>
             </div>
 
@@ -169,10 +172,11 @@ const EventosPage = () => {
                 </div>
             </div>
 
-            <EventoFormModal 
-                isOpen={isEventoModalOpen} 
-                onClose={() => setIsEventoModalOpen(false)} 
-                onSuccess={fetchEventos} 
+            <PlanillaCargaModal 
+                isOpen={isPlanillaModalOpen} 
+                onClose={() => setIsPlanillaModalOpen(false)} 
+                eventoId={selectedEventoId}
+                onSuccess={fetchInitialData} 
             />
 
             {loading ? (
@@ -205,28 +209,59 @@ const EventosPage = () => {
                                         onClick={() => navigate(`/eventos/${evento.id}`)}
                                         className="bg-slate-900/50 border border-slate-800 hover:border-blue-500/30 hover:bg-slate-800/80 p-6 rounded-[32px] transition-all group flex flex-col md:flex-row items-center justify-between gap-6 cursor-pointer shadow-lg hover:shadow-blue-500/5 relative overflow-hidden"
                                     >
-                                        <div className="absolute top-0 right-0 w-32 h-32 bg-blue-600/5 blur-[60px] pointer-events-none"></div>
-                                        <div className="flex items-center gap-6 relative z-10">
-                                            <div className="w-16 h-16 rounded-2xl bg-slate-800 flex flex-col items-center justify-center text-slate-400 group-hover:bg-blue-600 group-hover:text-white transition-all shadow-inner border border-white/5">
-                                                <span className="text-[10px] font-black uppercase tracking-widest leading-none mb-1 opacity-70">{new Date(evento.fecha_hora_inicio).toLocaleString('es-ES', { month: 'short' })}</span>
-                                                <span className="text-2xl font-black leading-none">{new Date(evento.fecha_hora_inicio).getDate()}</span>
-                                            </div>
-                                            <div>
-                                                <div className="flex items-center gap-2 mb-2">
-                                                    <span className="text-[9px] font-black px-3 py-1 bg-blue-600/20 text-blue-400 rounded-full border border-blue-500/10 uppercase tracking-widest">{evento.categoria_nombre || 'GENERAL'}</span>
-                                                    <span className="text-[9px] font-black px-3 py-1 bg-slate-800 text-slate-500 rounded-full border border-white/5 uppercase tracking-widest">{evento.tipo.replace('_', ' ')}</span>
+                                        <div className="flex flex-col md:flex-row items-center gap-6 relative z-10 w-full justify-between">
+                                            <div className="flex items-center gap-6">
+                                                <div className="w-16 h-16 rounded-2xl bg-slate-800 flex flex-col items-center justify-center text-slate-400 group-hover:bg-blue-600 group-hover:text-white transition-all shadow-inner border border-white/5">
+                                                    <span className="text-[10px] font-black uppercase tracking-widest leading-none mb-1 opacity-70">{new Date(evento.fecha_hora_inicio).toLocaleString('es-ES', { month: 'short' })}</span>
+                                                    <span className="text-2xl font-black leading-none">{new Date(evento.fecha_hora_inicio).getDate()}</span>
                                                 </div>
-                                                <h4 className="text-2xl font-black text-white group-hover:text-blue-400 transition-colors leading-tight mb-1">{evento.titulo}</h4>
-                                                <p className="text-slate-500 font-bold text-sm italic">{evento.rival ? `vs ${evento.rival}` : 'Actividad Interna'}</p>
+                                                <div>
+                                                    <div className="flex items-center gap-2 mb-2">
+                                                        <span className="text-[9px] font-black px-3 py-1 bg-blue-600/20 text-blue-400 rounded-full border border-blue-500/10 uppercase tracking-widest">{evento.categoria_nombre || 'GENERAL'}</span>
+                                                        <span className="text-[9px] font-black px-3 py-1 bg-slate-800 text-slate-500 rounded-full border border-white/5 uppercase tracking-widest">{evento.tipo.replace('_', ' ')}</span>
+                                                        
+                                                        {['PARTIDO_OFICIAL', 'AMISTOSO'].includes(evento.tipo) && (
+                                                            <span className={`text-[9px] font-black px-3 py-1 rounded-full border uppercase tracking-widest ${
+                                                                evento.estado_planilla === 'CERRADA' 
+                                                                    ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/20' 
+                                                                    : 'bg-amber-500/20 text-amber-500 border-amber-500/20'
+                                                            }`}>
+                                                                {evento.estado_planilla === 'CERRADA' ? `Planilla Cerrada (${evento.score_final})` : 'Planilla Pendiente'}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    <h4 className="text-2xl font-black text-white group-hover:text-blue-400 transition-colors leading-tight mb-1">{evento.titulo}</h4>
+                                                    <p className="text-slate-500 font-bold text-sm italic">{evento.rival ? `vs ${evento.rival}` : 'Actividad Interna'}</p>
+                                                </div>
                                             </div>
-                                        </div>
-                                        <div className="flex items-center gap-8 relative z-10">
-                                            <div className="text-right space-y-2">
-                                                <p className="flex items-center gap-2 text-sm font-black text-slate-300 justify-end"><Clock size={16} className="text-amber-500" /> {new Date(evento.fecha_hora_inicio).toLocaleTimeString('es-ES', {hour: '2-digit', minute:'2-digit'})} hs</p>
-                                                <p className="flex items-center gap-2 text-sm font-bold text-slate-500 justify-end"><MapPin size={16} className="text-emerald-500" /> {evento.lugar || 'Local'}</p>
-                                            </div>
-                                            <div className="p-4 bg-slate-800 group-hover:bg-blue-600 text-white rounded-2xl transition-all shadow-xl scale-90 group-hover:scale-100 flex items-center justify-center">
-                                                <ChevronRight size={24} />
+
+                                            <div className="flex flex-col md:flex-row items-center gap-8">
+                                                <div className="text-right space-y-2 hidden sm:block">
+                                                    <p className="flex items-center gap-2 text-sm font-black text-slate-300 justify-end"><Clock size={16} className="text-amber-500" /> {new Date(evento.fecha_hora_inicio).toLocaleTimeString('es-ES', {hour: '2-digit', minute:'2-digit'})} hs</p>
+                                                    <p className="flex items-center gap-2 text-sm font-bold text-slate-500 justify-end"><MapPin size={16} className="text-emerald-500" /> {evento.lugar || 'Local'}</p>
+                                                </div>
+
+                                                <div className="flex gap-2">
+                                                    {['PARTIDO_OFICIAL', 'AMISTOSO'].includes(evento.tipo) && (
+                                                        <button 
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                setSelectedEventoId(evento.id);
+                                                                setIsPlanillaModalOpen(true);
+                                                            }}
+                                                            className={`px-5 py-3 rounded-xl font-bold text-xs transition-all border shadow-lg ${
+                                                                evento.estado_planilla === 'CERRADA'
+                                                                    ? 'bg-slate-800 text-slate-400 border-slate-700 hover:bg-slate-700'
+                                                                    : 'bg-blue-600 text-white border-blue-500 hover:bg-blue-500 shadow-blue-600/20'
+                                                            }`}
+                                                        >
+                                                            {evento.estado_planilla === 'CERRADA' ? 'Editar Planilla' : 'Cargar Planilla'}
+                                                        </button>
+                                                    )}
+                                                    <div className="p-4 bg-slate-800 group-hover:bg-blue-600 text-white rounded-2xl transition-all shadow-xl scale-90 group-hover:scale-100 flex items-center justify-center">
+                                                        <ChevronRight size={24} />
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -235,7 +270,7 @@ const EventosPage = () => {
                         )}
                     </div>
 
-                    {/* PANEL DE ESTADISTICAS RÁPIDAS (Sidebar) */}
+                    {/* SIDEBAR PANEL */}
                     <div className="space-y-8">
                         <div className="bg-slate-900 border border-slate-800 p-8 rounded-[40px] shadow-2xl relative overflow-hidden">
                             <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/5 blur-[60px] pointer-events-none"></div>

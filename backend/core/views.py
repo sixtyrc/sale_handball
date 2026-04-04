@@ -1,3 +1,4 @@
+from django.shortcuts import get_object_or_404
 from rest_framework import viewsets, permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -41,7 +42,12 @@ class SocioViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         # Multi-tenant filter
-        return Socio.objects.filter(club=self.request.user.club)
+        qs = Socio.objects.filter(club=self.request.user.club)
+        es_profesor = self.request.query_params.get('es_profesor')
+        if es_profesor is not None:
+            es_profesor_bool = es_profesor.lower() == 'true'
+            qs = qs.filter(es_profesor=es_profesor_bool)
+        return qs
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
@@ -114,7 +120,7 @@ class SocioViewSet(viewsets.ModelViewSet):
                         'first_name': socio.nombres,
                         'last_name': socio.apellidos,
                         'club': club,
-                        'role': 'SOCIO',
+                        'role': 'PROFESOR' if socio.es_profesor else 'SOCIO',
                         'primer_ingreso': True,
                     }
                 )
@@ -145,6 +151,14 @@ class SocioViewSet(viewsets.ModelViewSet):
             except Exception as e:
                 print(f"⚠️ Error al crear usuario automático para socio {socio.dni}: {e}")
 
+    def perform_update(self, serializer):
+        socio = serializer.save(club=self.request.user.club)
+        if socio.usuario:
+            new_role = 'PROFESOR' if socio.es_profesor else 'SOCIO'
+            if socio.usuario.role != new_role:
+                socio.usuario.role = new_role
+                socio.usuario.save(update_fields=['role'])
+
     @action(detail=False, methods=['get'], url_path='disponibles-vincular')
     def disponibles_vincular(self, request):
         """
@@ -163,10 +177,11 @@ class SocioViewSet(viewsets.ModelViewSet):
             
         categoria = get_object_or_404(Categoria, id=cat_id, club=request.user.club)
         
-        # Filtro base: no deben tener PerfilDeportivo
-        qs = Socio.objects.filter(club=request.user.club).annotate(
-            tiene_perfil=Exists(PerfilDeportivo.objects.filter(socio=OuterRef('pk')))
-        ).filter(tiene_perfil=False)
+        # Filtro base: socios del club
+        qs = Socio.objects.filter(club=request.user.club)
+        # Opcional: Podríamos excluir a los que ya están en ESTA categoría específica si quisieras
+        # Pero para que el modal funcione siempre, traemos a todos los que NO son de esta categoría
+        qs = qs.exclude(perfil_deportivo__categoria_actual=categoria)
         
         # Filtro por Sexo (si la categoría no es Mixto)
         if categoria.genero != 'MIXTO':
@@ -174,7 +189,9 @@ class SocioViewSet(viewsets.ModelViewSet):
             
         socios_data = []
         for s in qs:
-            sugerida = Categoria.get_category_by_age(s.club, s.fecha_nacimiento.year, s.sexo)
+            sugerida = None
+            if s.fecha_nacimiento:
+                sugerida = Categoria.get_category_by_age(s.club, s.fecha_nacimiento.year, s.sexo)
             
             socios_data.append({
                 'id': s.id,
@@ -219,9 +236,6 @@ class SocioPublicCheckView(APIView):
             })
         except Socio.DoesNotExist:
             return Response({'error': 'Socio no encontrado'}, status=status.HTTP_404_NOT_FOUND)
-
-
-        return Response(socios_data)
 
 class GrupoFamiliarViewSet(viewsets.ModelViewSet):
     """

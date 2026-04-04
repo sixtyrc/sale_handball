@@ -588,6 +588,8 @@ Trazabilidad completa de acciones y Dashboards analíticos para la Comisión Dir
 - [x] **2026-04-01 14:05hs:** Migraciones aplicadas y URLs registradas bajo `/api/v1/locales/`.
 - [x] **2026-04-01 14:06hs:** Commit `feat(fase7)` base pusheado a rama `dev`.
 - [x] **2026-04-01 14:15hs:** APIs de Jornada Local y Muro de Ayuda finalizadas y testeadas.
+- [x] **2026-04-03 22:35hs:** FEATURE: Dashboard de Arqueo y Egresos dinámicos implementados (`EgresoJornada` y consolidación).
+- [x] **2026-04-03 22:38hs:** FEATURE: Sistema de Asistencia Nominal inyectado en el Kiosco, con soporte para re-ingresos automáticos y auto-cierre.
 
 ### FASE 8: GESTIÓN DEPORTIVA AVANZADA Y SOFT WARNINGS
 - [x] **2026-04-01 14:45hs:** SOP Fase 8 redactado (`docs/FASE8_gestion_deportiva_pro_SOP.md`).

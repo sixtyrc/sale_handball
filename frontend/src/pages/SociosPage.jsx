@@ -61,7 +61,7 @@ const SociosPage = () => {
 
     const fetchSocios = async () => {
         try {
-            const response = await api.get('socios/');
+            const response = await api.get('socios/?es_profesor=false');
             setSocios(response.data);
         } catch (error) {
             console.error('Error fetching socios:', error);

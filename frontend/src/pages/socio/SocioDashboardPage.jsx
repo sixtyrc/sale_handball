@@ -6,14 +6,41 @@ import {
   CheckCircle2, Clock, XCircle, ChevronRight, Upload,
   Send, Loader2, RefreshCw, ShieldCheck, Calendar
 } from 'lucide-react';
+import { useAuthStore } from '../../store/authStore';
+import clubLogoFallback from '../../assets/logo_club.png';
 
-const api = axios.create({ baseURL: 'http://localhost:8000/api/v1/' });
+// Instancia de axios para el socio (usa sessionStorage)
+const socioApi = axios.create({ baseURL: 'http://localhost:8000/api/v1/' });
+socioApi.interceptors.request.use(config => {
+  const token = sessionStorage.getItem('socio_token');
+  if (token) config.headers.Authorization = `Bearer ${token}`;
+  return config;
+}, error => Promise.reject(error));
+
+const getCategoryByAge = (birthDate) => {
+  if (!birthDate) return '—';
+  const today = new Date();
+  const birth = new Date(birthDate);
+  let age = today.getFullYear() - birth.getFullYear();
+  const m = today.getMonth() - birth.getMonth();
+  if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--;
+  
+  if (age <= 10) return 'MINI';
+  if (age <= 12) return 'INFANTILES';
+  if (age <= 14) return 'MENORES';
+  if (age <= 16) return 'CADETES';
+  if (age <= 18) return 'JUVENILES';
+  if (age <= 21) return 'JUNIORS';
+  if (age <= 30) return 'MAYORES';
+  return 'PAPIS_Y_MAMIS';
+};
 
 // Carnet visual reutilizando estética del sistema
 const CarnetSocioCard = ({ socio, cuenta }) => {
   const saldo = parseFloat(cuenta?.saldo || 0);
   const estadoColor = saldo >= 0 ? 'text-emerald-400' : 'text-red-400';
   const estadoBg = saldo >= 0 ? 'bg-emerald-500/10 border-emerald-500/20' : 'bg-red-500/10 border-red-500/20';
+  const categoriaCalculada = getCategoryByAge(socio?.fecha_nacimiento);
 
   return (
     <div className="relative rounded-2xl overflow-hidden bg-gradient-to-br from-zinc-900 via-slate-900 to-zinc-900 border border-zinc-700/50 shadow-2xl p-6">
@@ -28,10 +55,27 @@ const CarnetSocioCard = ({ socio, cuenta }) => {
       <div className="relative z-10 flex items-start gap-5">
         {/* Foto */}
         <div className="w-20 h-20 rounded-xl overflow-hidden border-2 border-zinc-600 bg-zinc-800 flex items-center justify-center shrink-0">
-          {socio?.foto
-            ? <img src={`http://localhost:8000${socio.foto}`} alt="Foto" className="w-full h-full object-cover" />
-            : <User size={32} className="text-zinc-500" />
-          }
+          {socio?.foto ? (
+            <img 
+              src={socio.foto.startsWith('http') ? socio.foto : `http://localhost:8000${socio.foto}`} 
+              alt="Foto Socio" 
+              className="w-full h-full object-cover" 
+              onError={(e) => {
+                e.target.style.display = 'none';
+                e.target.nextSibling.style.display = 'flex';
+              }}
+            />
+          ) : null}
+          
+          <div className={`${socio?.foto ? 'hidden' : 'flex'} w-full h-full items-center justify-center bg-zinc-800`}>
+            {socio?.sexo === 'FEMENINO' ? (
+              <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Annie&mood[]=happy" alt="Avatar" className="w-full h-full object-cover p-1" />
+            ) : socio?.sexo === 'MASCULINO' ? (
+              <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix&mood[]=happy" alt="Avatar" className="w-full h-full object-cover p-1" />
+            ) : (
+              <User size={32} className="text-zinc-500" />
+            )}
+          </div>
         </div>
 
         {/* Datos */}
@@ -57,7 +101,7 @@ const CarnetSocioCard = ({ socio, cuenta }) => {
 };
 
 // Grilla de cuenta corriente
-const CuentaCorrienteGrid = ({ movimientos }) => {
+const CuentaCorrienteGrid = ({ movimientos, onDownload }) => {
   if (!movimientos?.length) return (
     <div className="text-center py-10 text-zinc-500">
       <FileText size={32} className="mx-auto mb-2 opacity-40" />
@@ -88,14 +132,12 @@ const CuentaCorrienteGrid = ({ movimientos }) => {
                 </td>
                 <td className="py-3 px-2 text-right">
                   {positivo && (
-                    <a
-                      href={`http://localhost:8000/api/v1/finanzas/movimientos/${m.id}/pdf/`}
-                      target="_blank"
-                      rel="noopener noreferrer"
+                    <button
+                      onClick={() => onDownload(m.id)}
                       className="inline-flex items-center gap-1 text-xs text-blue-400 hover:text-blue-300 transition-colors"
                     >
                       <FileText size={12} /> PDF
-                    </a>
+                    </button>
                   )}
                 </td>
               </tr>
@@ -108,7 +150,7 @@ const CuentaCorrienteGrid = ({ movimientos }) => {
 };
 
 // Panel de aviso de pago
-const AvisarPagoPanel = ({ token, onSuccess }) => {
+const AvisarPagoPanel = ({ onSuccess }) => {
   const [monto, setMonto] = useState('');
   const [fecha, setFecha] = useState(new Date().toISOString().split('T')[0]);
   const [descripcion, setDescripcion] = useState('');
@@ -119,6 +161,9 @@ const AvisarPagoPanel = ({ token, onSuccess }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const token = sessionStorage.getItem('socio_token');
+    if (!token) { setError("Sesión expirada. Por favor reingresa."); return; }
+    
     setLoading(true);
     setError('');
     try {
@@ -128,26 +173,45 @@ const AvisarPagoPanel = ({ token, onSuccess }) => {
       formData.append('descripcion', descripcion);
       if (comprobante) formData.append('comprobante', comprobante);
 
-      await api.post('finanzas/mis-avisos/', formData, {
-        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' }
+      await socioApi.post('finanzas/mis-avisos/', formData, {
+        headers: { 
+          'Content-Type': 'multipart/form-data',
+          'Authorization': `Bearer ${token}`
+        }
       });
       setEnviado(true);
       onSuccess?.();
     } catch (err) {
-      setError(err.response?.data?.detail || 'No se pudo enviar el aviso.');
+      console.error("Error al enviar aviso:", err);
+      const backendError = err.response?.data ? JSON.stringify(err.response.data) : null;
+      setError(backendError || 'No se pudo enviar el aviso. Verificá tu conexión.');
     } finally {
       setLoading(false);
     }
   };
 
   if (enviado) return (
-    <div className="text-center py-8">
-      <CheckCircle2 size={48} className="text-emerald-400 mx-auto mb-3" />
-      <p className="text-white font-semibold">¡Aviso enviado!</p>
-      <p className="text-zinc-400 text-sm mt-1">El club validará tu pago y tu recibo aparecerá aquí.</p>
-      <button onClick={() => setEnviado(false)} className="mt-4 text-xs text-zinc-500 hover:text-zinc-300 underline">
-        Enviar otro aviso
-      </button>
+    <div className="text-center py-12 animate-in fade-in zoom-in duration-500">
+      <div className="relative inline-block mb-6">
+        <div className="absolute inset-0 bg-emerald-500/20 blur-2xl rounded-full animate-pulse" />
+        <div className="relative bg-zinc-900 border-2 border-emerald-500/50 rounded-full p-4 shadow-[0_0_30px_rgba(16,185,129,0.2)]">
+          <CheckCircle2 size={48} className="text-emerald-400" />
+        </div>
+      </div>
+      <h3 className="text-xl font-bold text-white mb-2 italic tracking-tight">¡PAGO NOTIFICADO CON ÉXITO! 🏆</h3>
+      <div className="max-w-[280px] mx-auto space-y-3">
+        <p className="text-zinc-400 text-sm leading-relaxed">
+          Tu aviso ya está en manos del club. <br/>
+          <span className="text-zinc-500 italic">"Una vez validado, verás tu recibo en el historial."</span>
+        </p>
+        <div className="h-px bg-gradient-to-r from-transparent via-zinc-800 to-transparent my-4" />
+        <button 
+          onClick={() => setEnviado(false)} 
+          className="w-full py-2.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-xs font-semibold rounded-xl transition-all border border-zinc-700/50"
+        >
+          Enviar otro comprobante
+        </button>
+      </div>
     </div>
   );
 
@@ -230,27 +294,29 @@ const SocioDashboardPage = () => {
   const [socio, setSocio] = useState(null);
   const [cuenta, setCuenta] = useState(null);
   const [avisos, setAvisos] = useState([]);
+  const { branding, fetchBranding } = useAuthStore();
 
   useEffect(() => {
     if (!token) { navigate('/socio/login'); return; }
+    if (!branding) fetchBranding('salesianos');
     fetchData();
   }, []);
 
   const fetchData = async () => {
     setLoading(true);
     try {
-      const headers = { Authorization: `Bearer ${token}` };
-      // Traemos el perfil del socio desde el usuario logueado
       const [socioRes, avisosRes] = await Promise.all([
-        api.get(`socios/`, { headers }),
-        api.get('finanzas/mis-avisos/', { headers }),
+        socioApi.get(`socios/`),
+        socioApi.get('finanzas/mis-avisos/'),
       ]);
-      // El primer socio del array es el del usuario logueado (multi-tenant ya filtra)
-      const miSocio = socioRes.data.find(s => s.usuario === user.id) || socioRes.data[0];
-      setSocio(miSocio);
+      
+      // Búsqueda robusta por ID o por DNI
+      const miSocio = socioRes.data.find(s => s.usuario === user.id) || socioRes.data.find(s => s.dni === user.username);
+      setSocio(miSocio || socioRes.data[0]);
 
-      if (miSocio) {
-        const cuentaRes = await api.get(`finanzas/socios/${miSocio.id}/cuenta/`, { headers });
+      if (miSocio || socioRes.data[0]) {
+        const targetSocio = miSocio || socioRes.data[0];
+        const cuentaRes = await socioApi.get(`finanzas/socios/${targetSocio.id}/cuenta/`);
         setCuenta(cuentaRes.data);
       }
       setAvisos(avisosRes.data);
@@ -258,6 +324,28 @@ const SocioDashboardPage = () => {
       console.error('Error cargando datos del socio:', err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDownloadPDF = async (movimientoId) => {
+    try {
+      const response = await socioApi.get(`finanzas/movimientos/${movimientoId}/pdf/`, {
+        responseType: 'blob'
+      });
+      
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `recibo_${movimientoId}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch (err) {
+      console.error("Error al descargar PDF:", err);
+      const errorMsg = err.response?.status === 401 
+        ? "No tienes permiso para descargar este recibo. Por favor reingresa."
+        : "Hubo un problema al generar el archivo. Por favor intenta más tarde o consulta en la administración.";
+      alert(errorMsg);
     }
   };
 
@@ -273,15 +361,35 @@ const SocioDashboardPage = () => {
     </div>
   );
 
+  if (!socio) return (
+    <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-10 text-center">
+      <AlertTriangle size={64} className="text-yellow-500 mb-4" />
+      <h1 className="text-2xl font-bold text-white mb-2">Perfil no encontrado</h1>
+      <p className="text-slate-400 mb-6 max-w-md">No hemos podido encontrar tus datos de socio vinculados a esta cuenta. Por favor contacta a la secretaría del club.</p>
+      <button onClick={handleLogout} className="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">Cerrar Sesión</button>
+    </div>
+  );
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-zinc-950 via-slate-950 to-zinc-950 text-white">
       {/* Header */}
       <header className="sticky top-0 z-50 bg-zinc-900/80 backdrop-blur-xl border-b border-zinc-800 px-4 py-3 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <ShieldCheck size={20} className="text-red-500" />
-          <span className="font-bold text-sm">Portal del Socio</span>
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-lg overflow-hidden bg-zinc-800 border border-white/5">
+             <img 
+               src={branding?.logo ? (branding.logo.startsWith('http') ? branding.logo : `http://localhost:8000${branding.logo}`) : clubLogoFallback} 
+               className="w-full h-full object-contain p-1"
+               alt="Logo"
+             />
+          </div>
+          <div>
+            <p className="text-[10px] font-black text-red-500 uppercase tracking-widest leading-none">Portal Socio</p>
+            <p className="text-xs font-bold text-white tracking-tight">
+               {branding?.club_nombre || 'Salesianos Handball'}
+            </p>
+          </div>
         </div>
-        <button onClick={handleLogout} className="flex items-center gap-1.5 text-xs text-zinc-400 hover:text-white transition-colors">
+        <button onClick={handleLogout} className="flex items-center gap-1.5 text-xs text-zinc-400 hover:text-white transition-colors py-2 px-3 hover:bg-white/5 rounded-xl">
           <LogOut size={14} /> Salir
         </button>
       </header>
@@ -301,13 +409,18 @@ const SocioDashboardPage = () => {
                 ['Email', socio.email_contacto || '—'],
                 ['Domicilio', socio.domicilio || '—'],
                 ['Grupo Sanguíneo', socio.grupo_sanguineo || '—'],
-                ['Categoría', socio.perfil_deportivo?.categoria_actual || '—'],
               ].map(([label, value]) => (
                 <div key={label}>
                   <p className="text-zinc-500 text-xs">{label}</p>
                   <p className="text-zinc-200 font-medium truncate">{value}</p>
                 </div>
               ))}
+              <div>
+                <p className="text-xs text-slate-400 uppercase tracking-wider mb-1">Categoría</p>
+                <p className="font-semibold text-white">
+                  {socio?.perfil_deportivo?.categoria_nombre || getCategoryByAge(socio?.fecha_nacimiento)}
+                </p>
+              </div>
             </div>
           </div>
         )}
@@ -343,7 +456,7 @@ const SocioDashboardPage = () => {
                   <RefreshCw size={14} />
                 </button>
               </div>
-              <CuentaCorrienteGrid movimientos={cuenta?.movimientos} />
+              <CuentaCorrienteGrid movimientos={cuenta?.movimientos} onDownload={handleDownloadPDF} />
             </>
           )}
 
@@ -355,7 +468,7 @@ const SocioDashboardPage = () => {
                   Completá el formulario y el club validará tu pago. Una vez aprobado, tu recibo estará disponible.
                 </p>
               </div>
-              <AvisarPagoPanel token={token} onSuccess={fetchData} />
+              <AvisarPagoPanel onSuccess={fetchData} />
             </>
           )}
 
@@ -380,14 +493,12 @@ const SocioDashboardPage = () => {
                             </p>
                           )}
                           {a.estado === 'VALIDADO' && a.movimiento_generado && (
-                            <a
-                              href={`http://localhost:8000/api/v1/finanzas/movimientos/${a.movimiento_generado}/pdf/`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="inline-flex items-center gap-1 text-xs text-blue-400 hover:text-blue-300 mt-1.5 transition-colors"
+                            <button
+                              onClick={() => handleDownloadPDF(a.movimiento_generado)}
+                              className="inline-flex items-center gap-1 text-xs text-blue-400 hover:text-blue-300 mt-1.5 transition-colors font-medium"
                             >
-                              <FileText size={10} /> Ver Recibo PDF
-                            </a>
+                              <FileText size={12} /> Descargar Recibo Oficial
+                            </button>
                           )}
                         </div>
                         <EstadoBadge estado={a.estado} />

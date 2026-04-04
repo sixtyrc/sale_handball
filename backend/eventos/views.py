@@ -4,7 +4,7 @@ from rest_framework import viewsets, permissions, status
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from django.shortcuts import get_object_or_404
-from .models import Evento, Convocatoria, Asistencia
+from .models import Evento, Convocatoria, Asistencia, DetallePartido, EquipoEnPartido, EstadisticaJugador, AccionPartido
 from core.models import Socio
 from finanzas.models import CuentaCorriente, MovimientoFinanciero
 from .serializers import (
@@ -13,7 +13,9 @@ from .serializers import (
     ConvocatoriaSerializer,
     BulkAsistenciaRequestSerializer,
     ThirdHalfPaymentSerializer,
-    ArbitrajePaymentSerializer
+    ArbitrajePaymentSerializer,
+    DetallePartidoSerializer,
+    CerrarPlanillaRequestSerializer
 )
 from deportes.models import PerfilDeportivo, Categoria
 from deportes.eligibility import check_player_health
@@ -211,8 +213,90 @@ class EventoViewSet(viewsets.ModelViewSet):
                 )
                 movimientos_count += 1
                 
+                
         return Response({
             "status": "OK", 
             "message": f"Se debitó ${abs(monto_individual)} a {movimientos_count} jugadores.",
             "monto_total_club": abs(monto_individual) * movimientos_count
         })
+
+    @action(detail=True, methods=['get'], url_path='planilla')
+    def get_planilla(self, request, pk=None):
+        """Obtiene o inicializa la planilla técnica para este partido."""
+        evento = self.get_object()
+        
+        # Validar tipo habilitado
+        if evento.tipo not in ['PARTIDO_OFICIAL', 'AMISTOSO']:
+            return Response({"error": "Las planillas solo están disponibles para partidos."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Usar get_or_create para DetallePartido
+        detalle, created = DetallePartido.objects.get_or_create(evento=evento)
+        
+        # Si es nueva, pre-configuramos el equipo local (el club)
+        if created:
+            EquipoEnPartido.objects.get_or_create(
+                detalle_partido=detalle,
+                es_local=True,
+                defaults={'nombre_equipo': evento.club.nombre, 'color_camiseta': 'Oficial'}
+            )
+            EquipoEnPartido.objects.get_or_create(
+                detalle_partido=detalle,
+                es_local=False,
+                defaults={'nombre_equipo': evento.rival or 'Rival', 'color_camiseta': 'Reserva/Otro'}
+            )
+
+        # Aseguramos que los convocados tengan su registro de estadística listo (vacío)
+        convocados = Convocatoria.objects.filter(evento=evento)
+        for c in convocados:
+            EstadisticaJugador.objects.get_or_create(detalle_partido=detalle, socio=c.jugador)
+
+        serializer = DetallePartidoSerializer(detalle)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=['post'], url_path='asociar-planilla')
+    def cerrar_planilla(self, request, pk=None):
+        """Guarda estadísticas masivas y cierra la planilla del partido."""
+        evento = self.get_object()
+        detalle = get_object_or_404(DetallePartido, evento=evento)
+        
+        serializer = CerrarPlanillaRequestSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        data = serializer.validated_data
+        
+        with transaction.atomic():
+            # 1. Update Detalle
+            detalle.goles_local = data['goles_local']
+            detalle.goles_visitante = data['goles_visitante']
+            detalle.sede_final = data.get('sede_final', detalle.sede_final)
+            detalle.observaciones_arbitro = data.get('observaciones', '')
+            detalle.estado_planilla = 'CERRADA'
+            
+            # Sanciones banco
+            detalle.amarilla_banco = data.get('amarilla_banco', False)
+            detalle.suspension_banco = data.get('suspension_banco', False)
+            detalle.roja_banco = data.get('roja_banco', False)
+            detalle.azul_banco = data.get('azul_banco', False)
+            detalle.save()
+
+            # 2. Update Stats Jugadores (bulk)
+            for item in data['stats_jugadores']:
+                socio_id = item.get('socio')
+                if not socio_id: continue
+                
+                stats_obj, _ = EstadisticaJugador.objects.get_or_create(
+                    detalle_partido=detalle, 
+                    socio_id=socio_id
+                )
+                stats_obj.dorsal = item.get('dorsal', '')
+                stats_obj.goles = item.get('goles', 0)
+                stats_obj.penales_lanzados = item.get('penales_lanzados', 0)
+                stats_obj.penales_convertidos = item.get('penales_convertidos', 0)
+                stats_obj.amarilla = item.get('amarilla', False)
+                stats_obj.suspensiones_2min = item.get('suspensiones_2min', 0)
+                stats_obj.roja = item.get('roja', False)
+                stats_obj.azul = item.get('azul', False)
+                stats_obj.save()
+
+        return Response({"status": "CP_OK", "message": "Planilla cerrada y estadísticas vinculadas correctamente."})

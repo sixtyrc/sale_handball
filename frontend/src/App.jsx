@@ -10,13 +10,15 @@ import LoginPage from './pages/LoginPage';
 // Lazy loading the rest of the application
 const Dashboard = lazy(() => import('./pages/Dashboard'));
 const SociosPage = lazy(() => import('./pages/SociosPage'));
+const StaffPage = lazy(() => import('./pages/StaffPage'));
 const FinanzasPage = lazy(() => import('./pages/FinanzasPage'));
 const DeportesPage = lazy(() => import('./pages/DeportesPage'));
 const LocalesPage = lazy(() => import('./pages/LocalesPage'));
+const JornadaDashboardPage = lazy(() => import('./pages/JornadaDashboardPage'));
 const ConfigPage = lazy(() => import('./pages/ConfigPage'));
 const PinEntry = lazy(() => import('./modules/locales/PinEntry'));
 const CanteenOperator = lazy(() => import('./modules/locales/CanteenOperator'));
-const ManualPage = lazy(() => import('./modules/manual/ManualPage'));
+const ManualPage = lazy(() => import('./pages/ManualPage'));
 const EventosPage = lazy(() => import('./pages/EventosPage'));
 const EventoDetailPage = lazy(() => import('./pages/EventoDetailPage'));
 
@@ -25,10 +27,19 @@ const SocioLoginPage = lazy(() => import('./pages/socio/SocioLoginPage'));
 const SocioCambiarClavePage = lazy(() => import('./pages/socio/SocioCambiarClavePage'));
 const SocioDashboardPage = lazy(() => import('./pages/socio/SocioDashboardPage'));
 
+// Landing Page Pública
+const LandingPage = lazy(() => import('./pages/LandingPage/LandingPage'));
+
 
 const ProtectedRoute = ({ children }) => {
-  const { isAuthenticated } = useAuthStore();
-  return isAuthenticated ? children : <Navigate to="/login" />;
+  const { isAuthenticated, user } = useAuthStore();
+  
+  // Si no está autenticado o es un SOCIO, no puede ver el ADMIN
+  if (!isAuthenticated || user?.role === 'SOCIO') {
+    return <Navigate to="/login" />;
+  }
+  
+  return children;
 };
 
 const LoadingScreen = () => (
@@ -58,16 +69,18 @@ function App() {
           {/* Rutas Protegidas de Administración */}
           <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
           <Route path="/socios" element={<ProtectedRoute><SociosPage /></ProtectedRoute>} />
+          <Route path="/staff" element={<ProtectedRoute><StaffPage /></ProtectedRoute>} />
           <Route path="/finanzas" element={<ProtectedRoute><FinanzasPage /></ProtectedRoute>} />
           <Route path="/deportes" element={<ProtectedRoute><DeportesPage /></ProtectedRoute>} />
           <Route path="/locales" element={<ProtectedRoute><LocalesPage /></ProtectedRoute>} />
+          <Route path="/locales/:id/cierre" element={<ProtectedRoute><JornadaDashboardPage /></ProtectedRoute>} />
           <Route path="/config" element={<ProtectedRoute><ConfigPage /></ProtectedRoute>} />
           <Route path="/ayuda" element={<ProtectedRoute><ManualPage /></ProtectedRoute>} />
           <Route path="/eventos" element={<ProtectedRoute><EventosPage /></ProtectedRoute>} />
           <Route path="/eventos/:id" element={<ProtectedRoute><EventoDetailPage /></ProtectedRoute>} />
           
-          <Route path="/" element={<Navigate to="/dashboard" />} />
-          <Route path="*" element={<Navigate to="/login" />} />
+          <Route path="/" element={<LandingPage />} />
+          <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </Suspense>
     </Router>

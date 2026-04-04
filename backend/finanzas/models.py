@@ -106,6 +106,7 @@ class AvisoPago(models.Model):
     descripcion = models.CharField(max_length=255, help_text="Ej: Cuota Abril 2026")
     comprobante = models.ImageField(
         upload_to=comprobante_path, null=True, blank=True,
+        max_length=500,
         help_text="Foto o captura del comprobante de transferencia (opcional)"
     )
     estado = models.CharField(max_length=20, choices=ESTADO_CHOICES, default='PENDIENTE')

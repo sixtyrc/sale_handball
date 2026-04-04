@@ -27,10 +27,11 @@ const CarnetVirtual = ({ socio, club }) => {
     };
 
     const age = calculateAge(socio.fecha_nacimiento);
-    const categoryName = getCategory(age);
+    const categoryName = socio.es_profesor ? 'PERSONAL AUTORIZADO' : getCategory(age);
 
-    const isVencido = socio.vencimiento_carnet.includes('VENCIDO') || socio.vencimiento_carnet.includes('RENOVAR');
-    const isVitalicio = socio.vencimiento_carnet.includes('VITALICIO');
+    const isVencido = !socio.es_profesor && (socio.vencimiento_carnet.includes('VENCIDO') || socio.vencimiento_carnet.includes('RENOVAR'));
+    const isVitalicio = !socio.es_profesor && socio.vencimiento_carnet.includes('VITALICIO');
+    const isStaff = socio.es_profesor;
 
     return (
         <div className="flex justify-center items-center py-6 sm:py-10 scale-100 sm:scale-110 print:scale-100 print:py-0">
@@ -64,14 +65,16 @@ const CarnetVirtual = ({ socio, club }) => {
                     <div className="mt-4 sm:mt-6 text-center space-y-2">
                         <div>
                             <p className="text-[7px] sm:text-[9px] font-black text-slate-600 uppercase tracking-[0.2em] mb-0.5 print:text-slate-400">Estado</p>
-                            <p className="text-white font-bold text-[9px] sm:text-[11px] uppercase italic tracking-widest print:text-slate-800">
-                                {isVitalicio ? 'Socio Vitalicio' : 'Socio Activo'}
+                            <p className={`${isStaff ? 'text-amber-500' : 'text-white'} font-bold text-[9px] sm:text-[11px] uppercase italic tracking-widest print:text-slate-800`}>
+                                {isStaff ? 'Staff Oficial' : (isVitalicio ? 'Socio Vitalicio' : 'Socio Activo')}
                             </p>
                         </div>
                         <div className="pt-2 border-t border-white/5 print:border-slate-200">
-                            <p className="text-[7px] sm:text-[9px] font-black text-slate-600 uppercase tracking-[0.2em] mb-0.5 print:text-slate-400">Categoría</p>
-                            <p className="text-blue-500 font-extrabold text-[10px] sm:text-xs uppercase tracking-tight print:text-blue-700">
-                                {categoryName}
+                            <p className="text-[7px] sm:text-[9px] font-black text-slate-600 uppercase tracking-[0.2em] mb-0.5 print:text-slate-400">
+                                {isStaff ? 'Rol' : 'Categoría'}
+                            </p>
+                            <p className={`${isStaff ? 'text-amber-500' : 'text-blue-500'} font-extrabold text-[10px] sm:text-xs uppercase tracking-tight print:text-blue-700`}>
+                                {isStaff ? 'PROFESOR / DT' : categoryName}
                             </p>
                         </div>
                     </div>
@@ -106,7 +109,7 @@ const CarnetVirtual = ({ socio, club }) => {
                             <h3 className="text-white font-black text-xl sm:text-2xl uppercase tracking-tighter leading-none print:text-slate-950">
                                 {socio.apellidos}
                             </h3>
-                            <p className="text-blue-400 font-black uppercase text-xs sm:text-sm tracking-wider print:text-blue-700">
+                            <p className={`${isStaff ? 'text-amber-500' : 'text-blue-400'} font-black uppercase text-xs sm:text-sm tracking-wider print:text-blue-700`}>
                                 {socio.nombres}
                             </p>
                         </div>
@@ -127,13 +130,17 @@ const CarnetVirtual = ({ socio, club }) => {
                     <div className="flex items-end justify-between mt-2 sm:mt-4">
                         <div className="mb-1">
                             <div className={`inline-flex items-center gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg border transition-all ${
-                                isVencido 
+                                isStaff 
+                                ? 'bg-amber-500/10 border-amber-500/20 text-amber-500 print:border-amber-500 print:text-amber-700'
+                                : isVencido 
                                 ? 'bg-red-500/10 border-red-500/20 text-red-500 print:border-red-500 print:text-red-700' 
                                 : 'bg-emerald-500/10 border-emerald-500/20 text-emerald-500 print:border-emerald-500 print:text-emerald-700'
                             }`}>
-                                {isVencido ? <AlertCircle size={8} sm:size={10} /> : <CheckCircle2 size={8} sm:size={10} />}
+                                {(isVencido && !isStaff) ? <AlertCircle size={8} sm:size={10} /> : <CheckCircle2 size={8} sm:size={10} />}
                                 <div className="text-left leading-none">
-                                    <p className="text-[8px] sm:text-[10px] font-black uppercase tracking-tight">{socio.vencimiento_carnet}</p>
+                                    <p className="text-[8px] sm:text-[10px] font-black uppercase tracking-tight">
+                                        {isStaff ? 'VIGENCIA ILIMITADA' : socio.vencimiento_carnet}
+                                    </p>
                                 </div>
                             </div>
                         </div>
@@ -155,6 +162,7 @@ const CarnetVirtual = ({ socio, club }) => {
 
                 {/* Elementos Estéticos: Línea de acento inferior */}
                 <div className={`absolute bottom-0 left-0 h-1 w-full bg-gradient-to-r print:hidden ${
+                    isStaff ? 'from-amber-400 via-amber-500 to-yellow-600' :
                     isVencido ? 'from-red-500 via-rose-500 to-orange-500' : 'from-blue-600 via-indigo-500 to-emerald-500'
                 }`} />
 

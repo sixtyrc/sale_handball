@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import MainLayout from '../components/layout/MainLayout';
 import api from '../services/api';
+import { useAuthStore } from '../store/authStore';
 import { 
     Store, 
     Calendar, 
@@ -12,7 +13,9 @@ import {
     MapPin,
     Clock,
     Lock,
-    ExternalLink,
+    MessageCircle,
+    Copy,
+    Check,
     AlertCircle,
     CheckCircle2,
     Trophy
@@ -23,12 +26,40 @@ import JornadaFormModal from '../modules/locales/JornadaFormModal';
 import RankingFamiliasModal from '../modules/locales/RankingFamiliasModal';
 
 const LocalesPage = () => {
-    const { addToast } = useUIStore();
+    const { addToast, branding } = useAuthStore();
+    const { addToast: addToastUI } = useUIStore();
     const navigate = useNavigate();
     const [jornadas, setJornadas] = useState([]);
     const [loading, setLoading] = useState(true);
     const [isJornadaModalOpen, setIsJornadaModalOpen] = useState(false);
     const [isRankingModalOpen, setIsRankingModalOpen] = useState(false);
+    const [copiadoId, setCopiadoId] = useState(null);
+
+    const generarMensajeWsp = (j) => {
+        const clubNombre = branding?.club_nombre || 'El Club';
+        const baseUrl = window.location.origin;
+        const url = `${baseUrl}/locales/${j.slug}/login`;
+        return (
+            `🏟️ *${clubNombre} — ${j.titulo}*\n` +
+            `📅 *Fecha:* ${j.fecha}\n\n` +
+            `¡Hola! Te invitamos a colaborar como voluntario en nuestra jornada como local.\n\n` +
+            `🔗 *Acceso:* ${url}\n` +
+            `🔑 *PIN de acceso:* ${j.access_pin}\n\n` +
+            `(El PIN vence a las 24hs. ¡Gracias por el apoyo! 🤝)`
+        );
+    };
+
+    const compartirWhatsApp = (j) => {
+        const msg = generarMensajeWsp(j);
+        window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
+    };
+
+    const copiarMensaje = async (j) => {
+        const msg = generarMensajeWsp(j);
+        await navigator.clipboard.writeText(msg);
+        setCopiadoId(j.id);
+        setTimeout(() => setCopiadoId(null), 2500);
+    };
 
     useEffect(() => {
         fetchJornadas();
@@ -139,32 +170,35 @@ const LocalesPage = () => {
                                     <Store size={20} />
                                     Abrir POS Cantina
                                 </Link>
-                                <button 
-                                    onClick={() => addToast({
-                                        type: 'info',
-                                        title: 'Módulo en Desarrollo',
-                                        message: 'La gestión de voluntarios estará disponible próximamente.'
-                                    })}
+                                <Link 
+                                    to={`/locales/${j.id}/cierre`}
                                     className="flex items-center gap-3 bg-slate-800 text-white px-8 py-4 rounded-2xl font-black transition-all hover:bg-slate-700"
                                 >
-                                    Ver Voluntarios
-                                </button>
-                                <div className="ml-auto flex items-center gap-3 bg-slate-900/50 border border-slate-700 px-6 py-3 rounded-2xl">
-                                    <Lock size={16} className="text-amber-500" />
-                                    <span className="text-sm font-mono text-slate-300">PIN: <span className="text-white font-black">{j.access_pin || '----'}</span></span>
-                                    <button 
-                                        onClick={() => { 
-                                            navigator.clipboard.writeText(`https://salesianos.app/locales/${j.slug}/login`); 
-                                            addToast({
-                                                type: 'success',
-                                                title: 'Enlace Copiado',
-                                                message: 'El link de acceso se ha copiado al portapapeles.'
-                                            });
-                                        }}
-                                        className="ml-2 hover:text-white transition-colors" 
-                                        title="Copiar Link para Voluntarios"
+                                    Administrar / Cierre
+                                </Link>
+                                {/* 🟢 Bloque de Compartir por WhatsApp */}
+                                <div className="ml-auto flex items-center gap-3">
+                                    {/* PIN Badge */}
+                                    <div className="flex items-center gap-2 bg-slate-900/80 border border-slate-700 px-4 py-2 rounded-xl">
+                                        <Lock size={14} className="text-amber-400" />
+                                        <span className="text-xs font-mono text-slate-300">PIN: <span className="text-amber-400 font-black text-sm">{j.access_pin || '----'}</span></span>
+                                    </div>
+                                    {/* Copiar Mensaje */}
+                                    <button
+                                        onClick={() => copiarMensaje(j)}
+                                        title="Copiar mensaje con PIN"
+                                        className="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white px-4 py-2 rounded-xl transition-all text-sm font-medium"
                                     >
-                                        <ExternalLink size={16} />
+                                        {copiadoId === j.id ? <Check size={16} className="text-emerald-400" /> : <Copy size={16} />}
+                                        {copiadoId === j.id ? 'Copiado!' : 'Copiar msg'}
+                                    </button>
+                                    {/* Compartir WhatsApp */}
+                                    <button
+                                        onClick={() => compartirWhatsApp(j)}
+                                        className="flex items-center gap-2 bg-[#25D366] hover:bg-[#1ebe5a] text-white px-5 py-2 rounded-xl font-bold transition-all shadow-lg shadow-green-600/20 active:scale-95"
+                                    >
+                                        <MessageCircle size={18} />
+                                        Compartir
                                     </button>
                                 </div>
                             </div>
@@ -211,11 +245,22 @@ const LocalesPage = () => {
                                                 <p className="text-xl font-bold text-emerald-500">$ {j.balance_neto || '0'}</p>
                                             </div>
                                         )}
+                                        {/* WhatsApp para jornadas PLANEADAS del historial */}
+                                        {j.estado === 'PLANEADA' && (
+                                            <button
+                                                onClick={() => compartirWhatsApp(j)}
+                                                title="Compartir convocatoria por WhatsApp"
+                                                className="flex items-center gap-2 bg-[#25D366]/10 hover:bg-[#25D366] text-[#25D366] hover:text-white px-4 py-2 rounded-xl transition-all text-sm font-bold"
+                                            >
+                                                <MessageCircle size={16} />
+                                                Convocatoria
+                                            </button>
+                                        )}
                                         <button 
-                                            onClick={() => navigate(`/locales/${j.slug}/pos`)}
-                                            className="p-4 bg-slate-900 border border-slate-800 rounded-2xl text-slate-500 hover:text-white hover:bg-slate-800 transition-all"
+                                            onClick={() => navigate(`/locales/${j.id}/cierre`)}
+                                            className="flex items-center gap-2 bg-slate-800 text-white px-5 py-2 rounded-xl font-bold transition-all hover:bg-slate-700 active:scale-95 text-sm"
                                         >
-                                            <ChevronRight size={20} />
+                                            {j.estado === 'FINALIZADA' ? 'Ver Arqueo' : 'Administrar'}
                                         </button>
                                     </div>
                                 </div>

@@ -51,6 +51,7 @@ class SocioSerializer(serializers.ModelSerializer):
     grupo_familiar_nombre = serializers.SerializerMethodField()
     descuento_familiar = serializers.SerializerMethodField()
     lesionado_activo = serializers.SerializerMethodField()
+    sports_stats = serializers.SerializerMethodField()
 
     class Meta:
         model = Socio
@@ -62,7 +63,7 @@ class SocioSerializer(serializers.ModelSerializer):
             'altura', 'peso', 'mano_habil', 'posicion_habitual', 'nombre_tutor',
             'dni_tutor', 'tel_tutor', 'parentesco_tutor', 'vencimiento_carnet',
             'grupo_familiar_id', 'grupo_familiar_nombre', 'descuento_familiar',
-            'lesionado_activo', 'created_at', 'updated_at'
+            'lesionado_activo', 'es_profesor', 'sports_stats', 'created_at', 'updated_at'
         ]
         read_only_fields = ['club', 'usuario', 'nro_socio']
 
@@ -76,3 +77,17 @@ class SocioSerializer(serializers.ModelSerializer):
 
     def get_lesionado_activo(self, obj):
         return getattr(obj, 'lesiones', None) and obj.lesiones.filter(estado='ACTIVA').exists()
+
+    def get_sports_stats(self, obj):
+        from django.db.models import Sum
+        # related_name en EstadisticaJugador es 'estadisticas_partidos'
+        stats = obj.estadisticas_partidos.filter(detalle_partido__estado_planilla='CERRADA')
+        
+        return {
+            'partidos_jugados': stats.count(),
+            'goles_totales': stats.aggregate(tot=Sum('goles'))['tot'] or 0,
+            'amarillas': stats.filter(amarilla=True).count(),
+            'suspensiones_2min': stats.aggregate(tot=Sum('suspensiones_2min'))['tot'] or 0,
+            'rojas': stats.filter(roja=True).count(),
+            'azules': stats.filter(azul=True).count(),
+        }
