@@ -176,38 +176,23 @@ class Socio(models.Model):
         return f"{self.apellidos}, {self.nombres} - [{self.nro_socio}]"
 
     def save(self, *args, **kwargs):
-        # Auto-generación de nro_socio si no existe
+        # Auto-generación de nro_socio definitivo (DNI[:2] + 001...)
+        is_new = self._state.adding
         if not self.nro_socio:
-            prefix = self.dni[:2] if self.dni else "00"
+            prefix = str(self.dni)[:2] if self.dni else "00"
             
-            # Buscar el número más alto para el sufijo (últimos 3 dígitos)
-            # Obtenemos todos los nro_socio que tengan al menos 5 caracteres
-            query = Socio.objects.filter(club=self.club).exclude(nro_socio__isnull=True).exclude(nro_socio="")
-            
-            max_suffix = 0
-            for s in query:
-                try:
-                    # El sufijo son los últimos 3 dígitos del nro_socio
-                    suffix_str = s.nro_socio[-3:]
-                    suffix_val = int(suffix_str)
-                    if suffix_val > max_suffix:
-                        max_suffix = suffix_val
-                except (ValueError, IndexError):
-                    continue
-            
-            next_num = max_suffix + 1
+            # Buscar la secuencia actual del club
+            ultima_secuencia = Socio.objects.filter(club=self.club).count()
+            next_num = ultima_secuencia + 1
             self.nro_socio = f"{prefix}{str(next_num).zfill(3)}"
 
         # Optimización de imagen 4x4 y < 300KB
         if self.foto:
             try:
                 img = Image.open(self.foto)
-                
-                # Convertir a RGB si es necesario (RGBA/P causes issues with JPEG)
                 if img.mode in ('RGBA', 'P'):
                     img = img.convert('RGB')
                 
-                # Redimensionar a cuadrado 4x4 (ej: 800x800)
                 width, height = img.size
                 if width != height:
                     min_dim = min(width, height)
@@ -218,39 +203,31 @@ class Socio(models.Model):
                     img = img.crop((left, top, right, bottom))
                 
                 img.thumbnail((800, 800), Image.Resampling.LANCZOS)
-                
-                # Comprimir hasta < 300KB
                 output = io.BytesIO()
-                quality = 85
-                img.save(output, format='JPEG', quality=quality)
-                
-                while output.tell() > 300 * 1024 and quality > 10:
-                    output = io.BytesIO()
-                    quality -= 5
-                    img.save(output, format='JPEG', quality=quality)
-                
+                img.save(output, format='JPEG', quality=85)
                 output.seek(0)
-                # Usar el nro_socio ya generado para el nombre del archivo
                 self.foto = ContentFile(output.read(), name=f"{self.nro_socio}.jpg")
             except Exception as e:
                 print(f"Error procesando imagen: {e}")
         
         super().save(*args, **kwargs)
         
-        # Automatización de Categorización por Edad (Reglas CAH)
+        # AUTOMATIZACIÓN DE CATEGORÍA (REGLAS CAH)
         try:
             from deportes.models import PerfilDeportivo, Categoria
-            perfil, _ = PerfilDeportivo.objects.get_or_create(socio=self)
+            perfil, created_p = PerfilDeportivo.objects.get_or_create(socio=self)
             
+            # Si es nuevo perfil y el socio tiene fecha nacimiento, categorizar
             if self.fecha_nacimiento:
-                # Determinar categoría por año de nacimiento
                 categoria_auto = Categoria.get_category_by_age(
                     birth_year=self.fecha_nacimiento.year,
                     gender=self.sexo if self.sexo in ['MASCULINO', 'FEMENINO'] else 'MIXTO',
                     club=self.club
                 )
+                
                 if categoria_auto:
                     perfil.categoria_actual = categoria_auto
+                    perfil.habilitado_federacion = True
                     perfil.save()
             
             # Auto-asignación de perfil Entrenador si aplica

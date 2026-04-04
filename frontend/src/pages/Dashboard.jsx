@@ -40,7 +40,7 @@ const Dashboard = () => {
             const socios = sociosRes.data || [];
             const categorias = catRes.data || [];
             
-            const activos = socios.filter(s => s.estado === 'ACTIVO').length;
+            const activos = socios.filter(s => s.estado === 'ACTIVO' && (s.role === 'SOCIO' || s.rol === 'SOCIO')).length;
             const activas = categorias.filter(c => c.activo).length;
             
             setStats({

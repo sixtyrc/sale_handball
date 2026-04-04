@@ -42,6 +42,7 @@ class VentaJornadaSerializer(serializers.ModelSerializer):
     class Meta:
         model = VentaJornada
         fields = '__all__'
+        read_only_fields = ['jornada']
 
 class CajaJornadaSerializer(serializers.ModelSerializer):
     resumen = serializers.SerializerMethodField()

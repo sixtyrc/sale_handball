@@ -86,6 +86,8 @@ cd C:\caddy
 
 ## ⚙️ Checklist Crítico de Errores (Troubleshooting)
 
+- **Error 405 (Method Not Allowed) en Login:** Ocurre si el frontend intenta hacer un POST a una ruta estática (ej: `/login/`) en lugar de ir a la API (`/api/v1/login/`). Solución: Verificar que el build del frontend use URLs absolutas con `window.location.origin` y que el `Caddyfile` tenga correctamente el bloque `handle /api/*`.
+- **Detección de Entorno:** El sistema usa `window.location.hostname === 'localhost'` para alternar entre puerto 8002 (Local) y producción (SSL).
 - **Error "fatal: not a git repository":** Asegurate de estar DENTRO de `C:\www\sale_handball` y no en la raíz `C:\www`.
 - **Caddy Line 92 Error:** Ocurre si faltan las llaves `{}` de cierre en los bloques de subdominios anteriores (AgendaSpa).
 - **Backend no carga (502 Bad Gateway):** 
@@ -96,6 +98,9 @@ cd C:\caddy
 ---
 
 ## 📝 Bitácora de Versiones (Changelog Actual)
+- Correcto direccionamiento de API en puerto 8002 (Solución a ERR_CONNECTION_REFUSED).
+- Implementación de Versionado Automático y Detección de Entorno (DEV/TEST).
+- Arreglo de Syntax Error por comillas simples en URLs dinámicas.
 - Agregado el Manual Interactivo para Admin/Staff.
 - Implementado sistema de estadísticas deportivas acumulativas.
 - Soporte para voluntarios nominativos en Somos Local.

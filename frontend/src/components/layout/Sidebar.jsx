@@ -18,7 +18,7 @@ import logoFallback from '../../assets/logo_club.png';
 import { useEffect } from 'react';
 
 const Sidebar = ({ isOpen, setIsOpen }) => {
-    const { logout, user, branding, fetchBranding } = useAuthStore();
+    const { logout, user, branding, fetchBranding, version } = useAuthStore();
 
     useEffect(() => {
         if (!branding) {
@@ -113,6 +113,10 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
                     <LogOut size={20} />
                     <span>Cerrar Sesión</span>
                 </button>
+                <div className="flex items-center justify-between px-4 py-2 mt-2 bg-slate-800/50 rounded-xl">
+                    <span className="text-[10px] font-bold text-slate-500 uppercase">Versión</span>
+                    <span className="text-[10px] font-black text-blue-500 tracking-tighter">{version}</span>
+                </div>
             </div>
         </aside>
     );

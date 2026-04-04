@@ -61,7 +61,7 @@ class SocioSerializer(serializers.ModelSerializer):
             'porcentaje_beca', 'telefono', 'email_contacto', 'domicilio',
             'contacto_emergencia_nombre', 'contacto_emergencia_telefono',
             'altura', 'peso', 'mano_habil', 'posicion_habitual', 'nombre_tutor',
-            'dni_tutor', 'tel_tutor', 'parentesco_tutor', 'vencimiento_carnet',
+            'dni_tutor', 'tel_tutor', 'parentesco_tutor', 'observaciones', 'vencimiento_carnet',
             'grupo_familiar_id', 'grupo_familiar_nombre', 'descuento_familiar',
             'lesionado_activo', 'es_profesor', 'sports_stats', 'created_at', 'updated_at'
         ]

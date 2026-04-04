@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { ShoppingBag, CreditCard, Banknote, ListCheck, LogOut, Trash2, Send, TrendingUp, Ticket, Coffee } from 'lucide-react';
-import axios from 'axios';
+import api from '../../services/api';
+import { useUIStore } from '../../store/uiStore';
 
 const CanteenOperator = () => {
+    const { addToast } = useUIStore();
     const { slug } = useParams();
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
@@ -45,7 +47,7 @@ const CanteenOperator = () => {
         if (!monto || parseFloat(monto) <= 0) return;
         setLoading(true);
         try {
-            const response = await axios.post(`/api/v1/locales/kiosco/${auth.jornada.id}/cargar-venta/`, {
+            const response = await api.post(`locales/kiosco/${auth.jornada.id}/cargar-venta/`, {
                 monto: parseFloat(monto),
                 tipo,
                 metodo_pago: metodoPago,
@@ -56,8 +58,13 @@ const CanteenOperator = () => {
             setMonto('');
             setSuccess(true);
             setTimeout(() => setSuccess(false), 2000);
+            addToast({ type: 'success', title: 'Venta Registrada', message: 'Monto: $' + monto });
         } catch (err) {
-            alert('Error al registrar venta. Verifique conexión.');
+            addToast({ 
+                type: 'error', 
+                title: 'Error en la Venta', 
+                message: err.response?.data?.error || 'No se pudo conectar con el servidor.' 
+            });
         } finally {
             setLoading(false);
         }
@@ -72,11 +79,14 @@ const CanteenOperator = () => {
 
         try {
             // Intentamos cerrar la asistencia en el backend
-            await axios.post(`/api/v1/locales/kiosco/${auth.jornada.id}/cerrar-asistencia/`, {
-                dni_declarado: auth.voluntario.dni_declarado
+            await api.post(`locales/kiosco/${auth.jornada.id}/cerrar-asistencia/`, {
+                dni_declarado: auth.voluntario.dni_declarado,
+                pin: auth.pin
             });
+            addToast({ type: 'success', title: 'Sesión Cerrada', message: 'Asistencia registrada correctamente.' });
         } catch (err) {
             console.error("Error al cerrar asistencia:", err);
+            addToast({ type: 'warning', title: 'Aviso', message: 'Sesión cerrada, pero no se pudo registrar la salida.' });
         } finally {
             sessionStorage.removeItem(`kiosco_auth_${slug}`);
             navigate(`/locales/${slug}/login`);
@@ -94,7 +104,7 @@ const CanteenOperator = () => {
                         {tipo === 'ENTRADA' ? <Ticket size={24} /> : <Coffee size={24} />}
                     </div>
                     <div className="flex flex-col">
-                        <h2 className="text-sm font-black truncate max-w-[150px] dark:text-white uppercase tracking-tight leading-none mb-1">
+                        <h2 className="text-sm font-black truncate max-w-[150px] text-slate-900 dark:text-white uppercase tracking-tight leading-none mb-1">
                             {auth.voluntario?.nombre_declarado || 'Voluntario'}
                         </h2>
                         <p className={`text-[9px] uppercase font-bold px-2 py-0.5 rounded inline-block w-fit ${tipo === 'ENTRADA' ? 'bg-blue-600/20 text-blue-400' : 'bg-orange-500/20 text-orange-400'}`}>

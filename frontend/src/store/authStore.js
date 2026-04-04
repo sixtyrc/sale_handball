@@ -12,7 +12,7 @@ export const useAuthStore = create((set) => ({
   token: localStorage.getItem('token') || null,
   isAuthenticated: !!localStorage.getItem('token'),
   env: window.location.hostname === 'localhost' ? 'DEV' : 'TEST',
-  version: typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '1.1.0',
+  version: typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : 'V1.8-LOCAL',
   branding: null,
 
   fetchBranding: async (slug) => {

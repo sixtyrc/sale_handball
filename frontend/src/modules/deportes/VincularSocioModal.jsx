@@ -62,13 +62,9 @@ const VincularSocioModal = ({ isOpen, onClose, onSuccess, categoriaId, categoria
         if (selectedIds.length === 0) return;
         setSaving(true);
         try {
-            await Promise.all(selectedIds.map(socioId => 
-                api.post('deportes/perfiles/', {
-                    socio: socioId,
-                    categoria_actual: categoriaId,
-                    estado_federativo: 'HABILITADO'
-                })
-            ));
+            await api.post(`deportes/categorias/${categoriaId}/vincular_socios/`, {
+                socio_ids: selectedIds
+            });
             
             addToast({
                 type: 'success',

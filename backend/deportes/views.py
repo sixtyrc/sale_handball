@@ -67,6 +67,25 @@ class CategoriaViewSet(viewsets.ModelViewSet):
             
         return Response({'status': 'asignado'})
 
+    @action(detail=True, methods=['post'])
+    def vincular_socios(self, request, pk=None):
+        categoria = self.get_object()
+        socio_ids = request.data.get('socio_ids', [])
+        
+        counts = 0
+        for s_id in socio_ids:
+            socio = get_object_or_404(Socio, id=s_id, club=request.user.club)
+            PerfilDeportivo.objects.update_or_create(
+                socio=socio,
+                defaults={
+                    'categoria_actual': categoria,
+                    'habilitado_federacion': True # Por defecto habilitamos al vincular
+                }
+            )
+            counts += 1
+            
+        return Response({'status': 'ok', 'vinculados': counts})
+
     @action(detail=False, methods=['get'])
     def disponibles_profes(self, request):
         from core.models import CustomUser
@@ -105,7 +124,8 @@ class PerfilDeportivoViewSet(viewsets.ModelViewSet):
             socio=socio,
             defaults={
                 'categoria_actual': serializer.validated_data.get('categoria_actual'),
-                'habilitado_federacion': serializer.validated_data.get('habilitado_federacion', True)
+                'habilitado_federacion': serializer.validated_data.get('habilitado_federacion', 
+                                         serializer.validated_data.get('estado_federativo', True) == 'HABILITADO')
             }
         )
         # Sincronizamos el serializer con el objeto creado/actualizado
