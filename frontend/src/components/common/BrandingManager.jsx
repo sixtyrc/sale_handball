@@ -22,7 +22,7 @@ const BrandingManager = () => {
         if (favicon) {
           const fullLogoUrl = branding.logo.startsWith('http') 
             ? branding.logo 
-            : `http://localhost:8000${branding.logo}`;
+            : `${window.location.hostname === 'localhost' ? 'http://localhost:8002' : ''}${branding.logo}`;
           favicon.href = fullLogoUrl;
         }
       }

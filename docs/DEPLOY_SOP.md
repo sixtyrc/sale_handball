@@ -1,71 +1,102 @@
-# SOP: Guía de Despliegue a Producción/Test (Windows Server)
+# SOP: Guía de Despliegue Técnica y de Servidor (Salesianos)
 
-**Rol Requerido:** Administrador del Servidor (CTSoft)
-**Versión Actual:** 1.8
-**Rama de Test Recomendada:** `test`
-**Rama de Producción:** `main`
+**Rol:** Administrador de Sistemas (CTSoft)
+**Versión:** 1.8.5
+**Entorno de Red:** Windows Server (Caddy + NSSM)
+**URL de Test:** `https://salesianos.ctsoft.com.ar`
 
 ---
 
-## 🚀 Proceso de Despliegue Continuo (Paso a Paso)
+## 🛡️ Configuración Estructural del Servidor
 
-Este proceso asume que el repositorio Git ya está clonado en el servidor Windows en la ruta base (ej: `C:\inetpub\wwwroot\salesianos`).
+### 1. Puertos de Servicio (Inamovibles)
+Para evitar conflictos con otros sistemas en el mismo servidor (Avícola, AgendaSpa), se ha asignado:
+- **Puerto 8000:** Avícola
+- **Puerto 8001:** AgendaSpa
+- **Puerto 8002:** **Salesianos (ESTE PROYECTO)**
 
-### 1. Actualización desde Control de Versiones (Git)
-Desde una consola de PowerShell administrada:
+### 2. Configuración de Caddy (Caddyfile)
+Ubicación: `C:\caddy\Caddyfile`
+Bloque específico que debe existir para este proyecto:
+```caddy
+salesianos.ctsoft.com.ar {
+    encode gzip
+    handle /api/* { reverse_proxy 127.0.0.1:8002 }
+    handle /admin/* { reverse_proxy 127.0.0.1:8002 }
+    handle_path /static/* {
+        root * C:\www\sale_handball\backend\staticfiles
+        file_server
+    }
+    handle_path /media/* {
+        root * C:\www\sale_handball\backend\media
+        file_server
+    }
+    handle {
+        root * C:\www\sale_handball\frontend\dist
+        try_files {path} /index.html
+        file_server
+    }
+}
+```
+
+### 3. Servicio de Windows (NSSM)
+Para mantener el backend corriendo siempre, se usa **NSSM** con el servicio `SalesianosBackend`:
+- **Path:** `C:\www\sale_handball\backend\venv\Scripts\python.exe`
+- **Startup dir:** `C:\www\sale_handball\backend`
+- **Arguments:** `manage.py runserver 0.0.0.0:8002`
+
+---
+
+## 🚀 Ciclo de Actualización (Deploy Rápido)
+
+Cada vez que quieras bajar cambios de GitHub al servidor, seguí este orden:
+
+### Paso 1: Sincronizar Git
 ```powershell
-cd C:\inetpub\wwwroot\salesianos
-# 1. Asegurarse de estar en la rama de TEST o MAIN
+cd C:\www\sale_handball
 git checkout test
-# 2. Descargar los últimos cambios
 git pull origin test
 ```
 
-### 2. Actualización del Backend (Django)
+### Paso 2: Actualizar Backend
 ```powershell
 cd backend
-# 1. Activar el entorno virtual (si se utiliza)
 .\venv\Scripts\Activate.ps1
-# 2. Instalar nuevas dependencias (ej: num2words)
 pip install -r requirements.txt
-# 3. Aplicar migraciones de base de datos
-python manage.py makemigrations
 python manage.py migrate
-# 4. Recolectar archivos estáticos para el admin
 python manage.py collectstatic --noinput
+# Reiniciar el servicio (Desde PowerShell Admin)
+Restart-Service SalesianosBackend
 ```
 
-### 3. Actualización del Frontend (Vite/React)
+### Paso 3: Actualizar Frontend
 ```powershell
 cd ..\frontend
-# 1. Instalar dependencias nuevas
 npm install
-# 2. Compilar versión optimizada
 npm run build
 ```
 
-### 4. Reinicio de Servicios (Caddy & Python)
+### Paso 4: Refrescar Servidor Web
 ```powershell
-# Reiniciar el servidor Caddy (si corre como servicio)
-Restart-Service caddy
-# Si el backend corre mediante un gestor como PM2 o Waitress, reiniciarlo:
-pm2 restart django-backend
+cd C:\caddy
+.\caddy.exe reload
 ```
 
 ---
 
-## ⚙️ Checklist Crítico Post-Deploy
+## ⚙️ Checklist Crítico de Errores (Troubleshooting)
 
-- [ ] **.env Frontend:** Verificar que `VITE_API_URL` apunte al dominio final y no a `localhost`.
-- [ ] **.env Backend:** 
-    - `DEBUG=False`
-    - `ALLOWED_HOSTS=salesianos.ctsoft.com.ar`
-    - `CORS_ALLOWED_ORIGINS=https://salesianos.ctsoft.com.ar`
-- [ ] **Archivos Media:** Asegurar que la carpeta `/backend/media` tenga permisos de escritura.
-- [ ] **Módulo Caddy:** Revisar si las redirecciones del Caddyfile apuntan correctamente a la carpeta `/frontend/dist`.
+- **Error "fatal: not a git repository":** Asegurate de estar DENTRO de `C:\www\sale_handball` y no en la raíz `C:\www`.
+- **Caddy Line 92 Error:** Ocurre si faltan las llaves `{}` de cierre en los bloques de subdominios anteriores (AgendaSpa).
+- **Backend no carga (502 Bad Gateway):** 
+    1. Revisar que el puerto en NSSM sea el mismo que en el Caddyfile (`8002`).
+    2. Verificar que el servicio `SalesianosBackend` esté en estado "Running".
+- **Falta de íconos o estilos en el Admin:** Verificar que se ejecutó `python manage.py collectstatic` y que la ruta en `handle_path /static/*` en Caddy sea correcta.
 
-## 📝 Changelog Reciente a Testear
-- Soporte Nominativo en Somos Local (identificación profunda por DNI).
-- Cuadro de arqueo dinámico con visualización PDF.
-- Reporte cruzado de Planillas Deportivas a Perfiles Individuales (Goles, Tarjetas).
-- Inclusión del nuevo Manual Interactivo nativo en el menú central.
+---
+
+## 📝 Bitácora de Versiones (Changelog Actual)
+- Agregado el Manual Interactivo para Admin/Staff.
+- Implementado sistema de estadísticas deportivas acumulativas.
+- Soporte para voluntarios nominativos en Somos Local.
+- Configuración de arqueo dinámico de caja para partidos.

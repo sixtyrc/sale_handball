@@ -10,7 +10,7 @@ import { useAuthStore } from '../../store/authStore';
 import clubLogoFallback from '../../assets/logo_club.png';
 
 // Instancia de axios para el socio (usa sessionStorage)
-const socioApi = axios.create({ baseURL: 'http://localhost:8000/api/v1/' });
+const socioApi = axios.create({ baseURL: '${window.location.hostname === 'localhost' ? 'http://localhost:8002' : ''}/api/v1/' });
 socioApi.interceptors.request.use(config => {
   const token = sessionStorage.getItem('socio_token');
   if (token) config.headers.Authorization = `Bearer ${token}`;
@@ -57,7 +57,7 @@ const CarnetSocioCard = ({ socio, cuenta }) => {
         <div className="w-20 h-20 rounded-xl overflow-hidden border-2 border-zinc-600 bg-zinc-800 flex items-center justify-center shrink-0">
           {socio?.foto ? (
             <img 
-              src={socio.foto.startsWith('http') ? socio.foto : `http://localhost:8000${socio.foto}`} 
+              src={socio.foto.startsWith('http') ? socio.foto : `${window.location.hostname === 'localhost' ? 'http://localhost:8002' : ''}${socio.foto}`} 
               alt="Foto Socio" 
               className="w-full h-full object-cover" 
               onError={(e) => {
@@ -377,7 +377,7 @@ const SocioDashboardPage = () => {
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-lg overflow-hidden bg-zinc-800 border border-white/5">
              <img 
-               src={branding?.logo ? (branding.logo.startsWith('http') ? branding.logo : `http://localhost:8000${branding.logo}`) : clubLogoFallback} 
+               src={branding?.logo ? (branding.logo.startsWith('http') ? branding.logo : `${window.location.hostname === 'localhost' ? 'http://localhost:8002' : ''}${branding.logo}`) : clubLogoFallback} 
                className="w-full h-full object-contain p-1"
                alt="Logo"
              />

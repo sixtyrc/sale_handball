@@ -112,7 +112,7 @@ const AvisosModal = ({ isOpen, onClose, onSuccess }) => {
                     <div className="mb-6">
                         <p className="text-slate-500 mb-2 text-sm">Comprobante Adjunto</p>
                         <a 
-                            href={`http://localhost:8000${selectedAviso.comprobante}`} 
+                            href={`${window.location.hostname === 'localhost' ? 'http://localhost:8002' : ''}${selectedAviso.comprobante}`} 
                             target="_blank" rel="noreferrer"
                             className="inline-flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-blue-400 rounded-lg transition-colors text-sm"
                         >

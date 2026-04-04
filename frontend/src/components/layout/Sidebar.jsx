@@ -27,7 +27,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
     }, [branding, user]);
 
     const currentLogo = branding?.logo 
-        ? (branding.logo.startsWith('http') ? branding.logo : `http://localhost:8000${branding.logo}`) 
+        ? (branding.logo.startsWith('http') ? branding.logo : `${window.location.hostname === 'localhost' ? 'http://localhost:8002' : ''}${branding.logo}`) 
         : logoFallback;
 
     const allNavItems = [

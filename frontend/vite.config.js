@@ -7,10 +7,14 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'http://localhost:8000',
+        target: 'http://localhost:8002',
         changeOrigin: true,
       }
     }
+  },
+  define: {
+    __APP_VERSION__: JSON.stringify(new Date().toISOString().split('T')[0].replace(/-/g, '') + '.' + Math.floor(Math.random() * 1000)),
+    __GIT_BRANCH__: JSON.stringify('main'), 
   },
   plugins: [
     react(),

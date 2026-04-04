@@ -5,7 +5,7 @@ import { LogIn, Info, Loader2, ShieldCheck } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 import clubLogoFallback from '../../assets/logo_club.png';
 
-const api = axios.create({ baseURL: 'http://localhost:8000/api/v1/' });
+const api = axios.create({ baseURL: '${window.location.hostname === 'localhost' ? 'http://localhost:8002' : ''}/api/v1/' });
 
 const SocioLoginPage = () => {
   const [dni, setDni] = useState('');
@@ -43,7 +43,7 @@ const SocioLoginPage = () => {
   };
 
   const currentLogo = branding?.logo 
-    ? (branding.logo.startsWith('http') ? branding.logo : `http://localhost:8000${branding.logo}`) 
+    ? (branding.logo.startsWith('http') ? branding.logo : `${window.location.hostname === 'localhost' ? 'http://localhost:8002' : ''}${branding.logo}`) 
     : clubLogoFallback;
 
   return (

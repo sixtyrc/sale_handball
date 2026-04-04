@@ -2,15 +2,15 @@ import { create } from 'zustand';
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: 'http://localhost:8000/api/v1/',
+  baseURL: import.meta.env.VITE_API_URL || (window.location.hostname === 'localhost' ? 'http://localhost:8002/api/v1/' : '/api/v1/'),
 });
 
 export const useAuthStore = create((set) => ({
   user: JSON.parse(localStorage.getItem('user')) || null,
   token: localStorage.getItem('token') || null,
   isAuthenticated: !!localStorage.getItem('token'),
-  env: import.meta.env.VITE_APP_ENV || 'dev',
-  version: import.meta.env.VITE_APP_VERSION || 'v1.0.0',
+  env: window.location.hostname === 'localhost' ? 'DEV' : 'TEST',
+  version: typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '1.1.0',
   branding: null,
 
   fetchBranding: async (slug) => {
@@ -28,9 +28,10 @@ export const useAuthStore = create((set) => ({
       if (response.data.logo) {
         const link = document.querySelector("link[rel~='icon']");
         if (link) {
+          const apiBase = import.meta.env.VITE_API_URL || (window.location.hostname === 'localhost' ? 'http://localhost:8002' : '');
           link.href = response.data.logo.startsWith('http') 
             ? response.data.logo 
-            : `http://localhost:8000${response.data.logo}`;
+            : `${apiBase}${response.data.logo}`;
         }
       }
       

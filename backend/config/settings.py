@@ -137,6 +137,10 @@ USE_TZ = True
 CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
 
+# Settings para HTTPS detrás de Caddy (Evitar Error 403 CSRF)
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+CSRF_TRUSTED_ORIGINS = ['https://salesianos.ctsoft.com.ar']
+
 
 # REST Framework y Autenticación JWT
 REST_FRAMEWORK = {
