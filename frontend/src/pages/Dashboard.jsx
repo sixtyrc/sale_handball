@@ -40,7 +40,8 @@ const Dashboard = () => {
             const socios = sociosRes.data || [];
             const categorias = catRes.data || [];
             
-            const activos = socios.filter(s => s.estado === 'ACTIVO' && (s.role === 'SOCIO' || s.rol === 'SOCIO')).length;
+            // Contar socios activos sin importar el rol (si es admin o profe también es socio si figura en la lista)
+            const activos = socios.filter(s => s.estado === 'ACTIVO').length;
             const activas = categorias.filter(c => c.activo).length;
             
             setStats({

@@ -5,7 +5,8 @@ import api from '../services/api';
 import { useUIStore } from '../store/uiStore';
 import { 
     Calendar, ArrowLeft, Download, Wallet, CreditCard, Banknote,
-    TrendingUp, Lock, CheckCircle2, Ticket, Coffee, FileSpreadsheet
+    TrendingUp, Lock, CheckCircle2, Ticket, Coffee, FileSpreadsheet,
+    Trash2
 } from 'lucide-react';
 
 const JornadaDashboardPage = () => {

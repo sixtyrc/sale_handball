@@ -77,7 +77,13 @@ class JornadaListSerializer(serializers.ModelSerializer):
         fields = ['id', 'titulo', 'fecha', 'estado', 'estado_display', 'slug', 'access_pin', 'voluntarios_count']
 
     def get_voluntarios_count(self, obj):
-        return obj.voluntarios.count()
+        # Cuenta voluntarios asignados + asistencias registradas (evitando duplicar si alguien está en ambos)
+        vols = set(obj.voluntarios.values_list('persona_id', flat=True))
+        asis = set(obj.asistencias.values_list('socio_id', flat=True))
+        # Sumamos también los que no tienen socio vinculado pero tienen DNI distinto
+        asis_sin_socio = obj.asistencias.filter(socio__isnull=True).values_list('dni_declarado', flat=True).distinct().count()
+        
+        return len(vols | asis) + asis_sin_socio
 
 # Serializador minimo para acceso rapido por PIN (Kiosco)
 class KioscoJornadaSerializer(serializers.ModelSerializer):

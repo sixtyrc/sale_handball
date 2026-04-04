@@ -90,13 +90,22 @@ const EventosPage = () => {
                     <p className="text-slate-400 font-medium">Fixture, entrenamientos y carga de planillas dinámicas</p>
                 </div>
                 <button 
-                    onClick={() => setIsEventoModalOpen(true)}
+                    onClick={() => {
+                        console.log("Abriendo modal de agendar partido...");
+                        setIsEventoModalOpen(true);
+                    }}
                     className="flex items-center gap-3 bg-blue-600 hover:bg-blue-500 text-white px-8 py-4 rounded-2xl font-black transition-all shadow-xl shadow-blue-600/20 active:scale-95"
                 >
                     <Plus size={20} />
                     Agendar nuevo Partido
                 </button>
             </div>
+
+            <EventoFormModal 
+                isOpen={isEventoModalOpen} 
+                onClose={() => setIsEventoModalOpen(false)}
+                onSuccess={fetchEventos}
+            />
 
             {/* BARRA DE FILTROS PREMIUM */}
             <div className="bg-slate-900/50 border border-slate-800 p-6 rounded-[32px] mb-8 backdrop-blur-md">
