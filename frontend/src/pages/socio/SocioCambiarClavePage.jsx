@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { KeyRound, Loader2, Info, CheckCircle2, Eye, EyeOff } from 'lucide-react';
 
-const api = axios.create({ baseURL: `${window.location.hostname === 'localhost' ? 'http://localhost:8002' : ''}/api/v1/` });
+const api = axios.create({ baseURL: window.location.hostname === 'localhost' ? 'http://localhost:8002/api/v1/' : `${window.location.origin}/api/v1/` });
 
 const SocioCambiarClavePage = () => {
   const [actual, setActual] = useState('');

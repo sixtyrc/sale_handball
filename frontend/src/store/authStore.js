@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || (window.location.hostname === 'localhost' ? 'http://localhost:8002/api/v1/' : '/api/v1/'),
+  baseURL: import.meta.env.VITE_API_URL || (window.location.hostname === 'localhost' ? 'http://localhost:8002/api/v1/' : `${window.location.origin}/api/v1/`),
 });
 
 export const useAuthStore = create((set) => ({

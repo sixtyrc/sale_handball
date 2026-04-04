@@ -10,7 +10,7 @@ import { useAuthStore } from '../../store/authStore';
 import clubLogoFallback from '../../assets/logo_club.png';
 
 // Instancia de axios para el socio (usa sessionStorage)
-const socioApi = axios.create({ baseURL: `${window.location.hostname === 'localhost' ? 'http://localhost:8002' : ''}/api/v1/` });
+const socioApi = axios.create({ baseURL: window.location.hostname === 'localhost' ? 'http://localhost:8002/api/v1/' : `${window.location.origin}/api/v1/` });
 socioApi.interceptors.request.use(config => {
   const token = sessionStorage.getItem('socio_token');
   if (token) config.headers.Authorization = `Bearer ${token}`;
